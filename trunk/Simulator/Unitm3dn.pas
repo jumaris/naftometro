@@ -213,7 +213,7 @@ begin
     inc (i);
   end;
 
-  maxpolz := i;
+  maxpolz := i + 1;
 
   hz [i].r := r0;
   hz [i].kbeta := 1;
@@ -250,7 +250,7 @@ begin
   hz [i].r := r0;
   hz [i].kbeta := 0.28 / 4;
   hz [i].ispp := true;
-  maxpolz2 := i;
+  maxpolz2 := i + 1;
 
   //Задание тормозных характеристик
   for i := 0 to bshamount - 1 do
@@ -287,7 +287,7 @@ begin
 	if not BASS_Init(-1, 44100, 0, Handle, nil) then
 	begin
 		BASS_Free();
-		MessageDlg('Cannot start device!', mtError, [mbOk], 0);
+		MessageDlg('Cannot start device (audio)!', mtError, [mbOk], 0);
 		Halt;
 	end;
 end;
@@ -457,7 +457,7 @@ begin
     polzunok := rup;
   if (rup = 2) and (polzunok > maxpolz) then
     polzunok := maxpolz;
-  if (((rup = 2) and (polzunok <= maxpolz)) or ((rup = 3) and (polzunok <= maxpolz2))) and (polzunwait < 0) then
+  if (((rup = 2) and (polzunok < maxpolz)) or ((rup = 3) and (polzunok < maxpolz2))) and (polzunwait < 0) then
   begin
     f2 := givef (polzunok, v);
     if (f2 / mwag < amax) then
@@ -1077,7 +1077,7 @@ begin
     hrue := nil;
     while (pp^.next <> nil) do
       pp := pp^.next;
-    while (dep < maxdep) and (p^.next1 = p^.next2) and (p^.next1 <> nil) do
+    while (dep < maxdep) and (p <> nil) and (p^.next1 = p^.next2) do
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1100,7 +1100,7 @@ begin
     end;
     if hrue <> nil then
       RecConstQue(hrue, togdadep);
-    if  (dep < maxdep) and (p^.next1 <> nil) and (p^.next2 <> nil) then
+    if  (dep < maxdep) and (p <> nil) and (p^.next1 <> nil) and (p^.next2 <> nil) then
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1116,7 +1116,7 @@ begin
     hrue := nil;
     while (pp^.next <> nil) do
       pp := pp^.next;
-    while (dep < maxdep) and (p^.previous1 = p^.previous2) and (p^.previous1 <> nil) do
+    while (dep < maxdep) and (p <> nil) and (p^.previous1 = p^.previous2) do
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1139,7 +1139,7 @@ begin
     end;
     if hrue <> nil then
       RecConstQue(hrue, togdadep);
-    if  (dep < maxdep) and (p^.previous1 <> nil) and (p^.previous2 <> nil) then
+    if  (dep < maxdep) and (p <> nil) and (p^.previous1 <> nil) and (p^.previous2 <> nil) then
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1154,12 +1154,30 @@ end;
 procedure TMainForm.PaintFloor(p: Ptp);
 var p2:PTp;
     c:Real;
+    i:Integer;
 begin
   if p = nil then Exit;
+
   p2 := p^.next2;
-  if (p^.idstat <> 0) or (p2 = nil) or (p2^.idstat <> 0) then Exit;
   c := bwgc(p);
   glColor3f(C * tubr, c * tubg, c * tubb);
+  if (p^.previous1 = nil) or (p2 = nil) then            //Заплатка на конец тоннеля
+    for i := 0 to numboc div 2 - 1 do
+    begin
+      glBegin(GL_QUADS);
+        glTexCoord2f (0, 0);
+        glVertex3f(p^.corners [i].x, p^.corners [i].y, p^.corners [i].z);
+        glTexCoord2f (0, 1);
+        glVertex3f(p^.corners [i + 1].x, p^.corners [i + 1].y, p^.corners [i + 1].z);
+        glTexCoord2f (1, 1);
+        glVertex3f(p^.corners [numboc - i - 2].x, p^.corners [numboc - i - 2].y, p^.corners [numboc - i - 2].z);
+        glTexCoord2f (1, 0);
+        glVertex3f(p^.corners [numboc - i - 1].x, p^.corners [numboc - i - 1].y, p^.corners [numboc - i - 1].z);
+      glEnd;
+    end;
+
+  if (p^.idstat <> 0) or (p2 = nil) or (p2^.idstat <> 0) then Exit;// Собственно пол не нужен
+
   if (p2 <> nil) and (
     (p^.together = p) and (p2^.together = p2)
     ) or (

@@ -2,6 +2,5 @@ To version 0.3
 * Fix holes in tunnels
 * Good manuals
 * Increase amount of parameters (params.naftometro)
-* Relistic dynamic brakes (almost done)
 * Train properties in file (needed?)
 * SCB passage bug fix

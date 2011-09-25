@@ -16,7 +16,7 @@ const mu = 0.25;                  //трение об рельсы
       mwag = 32500;                 //масса вагона
       u = 825;                      //Напруга
       amax = 1.2;                   //Максимальное ускорение, создаваемое движком
-      amax1 = 1.4;                  // -//- в режиме торможения
+      amax1 = 1.2;                  // -//- в режиме торможения
       amax2 = 3;                    // -//- пневмотормозом
       pmax = 1;                     //
       pmin = 0.15;                  //
@@ -29,10 +29,10 @@ const mu = 0.25;                  //трение об рельсы
       beta0 = 2;
       rmax = 5;
       r0 = 0.01;
-      IMAX = 300;
+      IMAX = 350;
       maxdep = 100;
-      brakeconst = 50;
-      bshamount = 19;
+      brakeconst = 100;
+      bshamount = 17;
       dv = 0.00001; //Физически бесконечно малая скорость
 
 type
@@ -44,6 +44,7 @@ type
   TBrakeHz = record
     vmin:real;
     R:real;
+    kbeta:real;
   end;
   TControlKeys = record
     fw:boolean;
@@ -253,10 +254,18 @@ begin
 
   //Задание тормозных характеристик
   for i := 0 to bshamount - 1 do
-    brakehz [i].vmin := 1.5;
+    brakehz [i].vmin := 3 - 2.5 * i / (bshamount - 1);
   brakehz [0].R := 5;
-  for i := 1 to bshamount - 1 do
-    brakehz [i].R := brakehz [i - 1].R  / (1.3);
+  brakehz [0].kbeta := 0.5;
+  brakehz [1].R := 5;
+  brakehz [1].kbeta := 0.7;
+  brakehz [2].R := 5;
+  brakehz [2].kbeta := 1;
+  for i := 3 to bshamount - 1 do
+  begin
+   brakehz [i].R := brakehz [i - 1].R  / (1.3);
+   brakehz [i].kbeta := 1;
+  end;
 
 
   TextureAmount := 0;
@@ -299,8 +308,9 @@ begin
     LFlim.Caption := 'Будущ огранич:' + IntToStr (round (wtf.givelimbycond [wtf.scb [wtf.gntrscbid].condition] * 3.6)) + ' км/ч'
   else
     LFlim.Caption := 'Далее нет светофоров';
-  LabelI.Caption := 'Ток через все дв.:' + IntToStr (round (givei2 (polzunok - 1, v))) + ' А';
+  LabelI.Caption := 'Ток через все дв.:' + IntToStr (round (givei2 (polzunok, v))) + ' А';
   label2.Caption := 'Номер схемы:' + IntToStr (polzunok);
+
   if polzunok > 0 then
   begin
     label3.Caption := 'Сопротивление:' + FloatToStr (round (hz [polzunok - 1].r * 100) / 100);
@@ -308,8 +318,13 @@ begin
       label4.Caption := 'Поле:' + IntToStr (round (hz [polzunok - 1].kbeta * 400)) + '% п/п'
     else
       label4.Caption := 'Поле:' + IntToStr (round (hz [polzunok - 1].kbeta * 100)) + '%';
-  end
-  else
+  end;
+  if polzunok < 0 then
+  begin
+    label3.Caption := 'Сопротивление:' + FloatToStr (round (brakehz [-polzunok - 1].r * 100) / 100);
+    label4.Caption := 'Поле:' + IntToStr (round (brakehz [-polzunok - 1].kbeta * 100)) + '%';
+  end;
+  if polzunok = 0 then
   begin
     label3.Caption := 'Собери';
     label4.Caption := 'схему';
@@ -355,7 +370,7 @@ begin
   else
     AOS.Visible := false;
 
-  if givei (polzunok - 1, v) > IMAX then      //РП
+  if givei (polzunok, v) > IMAX then      //РП
   begin
     isrp := true;
     blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Сработка РП');
@@ -549,7 +564,7 @@ begin
 
   //После того, как мы учли все факторы, подействуем этой силой.
 
-  if (abs (v) > abs (F / mwag * k)) then   //v > a*dt - всё отлично, не нелажаем
+  if (abs (v) > abs (F / mwag * k)) then   //v > a*dt - всё отлично, не налажаем
     v := v + F / mwag * k
   else
     if v * F >= 0 then     //Сонаправлены
@@ -863,13 +878,16 @@ end;
 
 function TMainForm.givei(i: integer; v: real): real;
 begin
-  if (i >= 0) then
-    if hz [i].ispp then
-      result := U / (hz [i].r + hz [i].kbeta * beta0 * abs (v)) / 2
+  if (i > 0) then
+    if hz [i-1].ispp then
+      result := U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v)) / 2
     else
-      result := U / (hz [i].r + hz [i].kbeta * beta0 * abs (v))
+      result := U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v))
   else
-    result := 0;
+    if (i < 0) and (Abs (v) > brakehz [-i-1].vmin)then
+      result := (abs (v) - brakehz [-i-1].vmin) * brakeconst * brakehz [-i-1].kbeta / brakehz [-i-1].R / 2 //U / R, ispp
+    else
+      result := 0;
 end;
 
 function TMainForm.bwgc(p: PTp): real;
@@ -1352,10 +1370,13 @@ end;
 
 function TMainForm.givei2(i: integer; v: real): real;
 begin
-  if (i >= 0) then
-    result := U / (hz [i].r + hz [i].kbeta * beta0 * abs (v))
+  if (i > 0) then
+    result := U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v))
   else
-    result := 0;
+    if (i < 0) and (Abs (v) > brakehz [-i-1].vmin)then
+      result := (abs (v) - brakehz [-i-1].vmin) * brakeconst * brakehz [-i-1].kbeta / brakehz [-i-1].R //U / R
+    else
+      result := 0;
 end;
 
 procedure TMainForm.SetChannels;
@@ -1400,7 +1421,7 @@ end;
 function TMainForm.givebrakef(i: integer; v: real): real;
 begin
   if Abs (v) > brakehz [i].vmin then
-    result := sqr ((abs (v) - brakehz [i].vmin) * brakeconst) / brakehz [i].R / Abs (v) //U^2 / R / v
+    result := sqr ((abs (v) - brakehz [i].vmin) * brakeconst * brakehz [i].kbeta) / brakehz [i].R / Abs (v) //U^2 / R / v
   else
     Result := 0;
 end;

@@ -1152,7 +1152,7 @@ begin
 end;
 
 procedure TMainForm.PaintFloor(p: Ptp);
-var p2:PTp;
+var p2, p3:PTp;
     c:Real;
     i:Integer;
 begin
@@ -1178,21 +1178,69 @@ begin
 
   if (p^.idstat <> 0) or (p2 = nil) or (p2^.idstat <> 0) then Exit;// Собственно пол не нужен
 
-  if (p2 <> nil) and (
-    (p^.together = p) and (p2^.together = p2)
-    ) or (
-    p^.isright and (p2^.together <> p2) and (p^.together <> p)
-    ) then
+  if (p^.together <> p) and (p2^.together = p2) and (not p^.isright) then
   begin
-    glBegin(GL_QUADS);
+    glBegin(GL_QUADS);            //Неправильная щель
       glTexCoord2f (0, 0);
-      glVertex3f(p^.corners [0].x, p^.corners [0].y, p^.corners [0].z);
-      glTexCoord2f (0, 1);
-      glVertex3f(p^.together^.corners [numboc - 1].x, p^.together^.corners [numboc - 1].y, p^.together^.corners [numboc - 1].z);
-      glTexCoord2f (1, 1);
-      glVertex3f(p2^.together^.corners [numboc - 1].x, p2^.together^.corners [numboc - 1].y, p2^.together^.corners [numboc - 1].z);
+      glVertex3f(p2^.corners [numboc - 1].x, p2^.corners [numboc - 1].y, p2^.corners [numboc - 1].z);
       glTexCoord2f (1, 0);
       glVertex3f(p2^.corners [0].x, p2^.corners [0].y, p2^.corners [0].z);
+      p3 := p^.together^.next1;
+      glTexCoord2f (1, 1);
+      glVertex3f(p3^.corners [numboc - 1].x, p3^.corners [numboc - 1].y, p3^.corners [numboc - 1].z);
+      glTexCoord2f (0, 1);
+      glVertex3f(p3^.corners [0].x, p3^.corners [0].y, p3^.corners [0].z);
+    glEnd;
+
+    glBegin(GL_QUADS);     //Пол
+      glTexCoord2f (0, 1);
+      glVertex3f(p3^.corners [0].x, p3^.corners [0].y, p3^.corners [0].z);
+      glTexCoord2f (1, 1);
+      glVertex3f(p^.together^.corners [0].x, p^.together^.corners [0].y, p^.together^.corners [0].z);
+      glTexCoord2f (1, 0);
+      glVertex3f(p^.corners [numboc - 1].x, p^.corners [numboc - 1].y, p^.corners [numboc - 1].z);
+      glTexCoord2f (0, 0);
+      glVertex3f(p2^.corners [numboc - 1].x, p2^.corners [numboc - 1].y, p2^.corners [numboc - 1].z);
+    glEnd;
+    glBegin(GL_QUADS);    //Потолок
+      glTexCoord2f (0, 0);
+      glVertex3f(p^.corners [numboc div 2].x, p^.corners [numboc div 2].y, p^.corners [numboc div 2].z);
+      glTexCoord2f (0, 1);
+      glVertex3f(p^.together^.corners [numboc div 2].x, p^.together^.corners [numboc div 2].y, p^.together^.corners [numboc div 2].z);
+      glTexCoord2f (1, 1);
+      glVertex3f(p3^.corners [numboc div 2].x, p3^.corners [numboc div 2].y, p3^.corners [numboc div 2].z);
+      glTexCoord2f (1, 0);
+      glVertex3f(p2^.corners [numboc div 2].x, p2^.corners [numboc div 2].y, p2^.corners [numboc div 2].z);
+    glEnd;
+
+    for i := 0 to numboc div 2 - 1 do  //Стенка в камере съездов
+    begin
+      glBegin(GL_QUADS);
+        glTexCoord2f (0, 0);
+        glVertex3f(p2^.corners [i].x, p2^.corners [i].y, p2^.corners [i].z);
+        glTexCoord2f (0, 1);
+        glVertex3f(p2^.corners [i + 1].x, p2^.corners [i + 1].y, p2^.corners [i + 1].z);
+        glTexCoord2f (1, 1);
+        glVertex3f(p3^.corners [numboc - i - 2].x, p3^.corners [numboc - i - 2].y, p3^.corners [numboc - i - 2].z);
+        glTexCoord2f (1, 0);
+        glVertex3f(p3^.corners [numboc - i - 1].x, p3^.corners [numboc - i - 1].y, p3^.corners [numboc - i - 1].z);
+      glEnd;
+    end;
+  end;
+
+  if ((p^.together = p) and (p2^.together = p2)) or
+     (not p2^.isright and (p2^.together <> p2){ and (p^.together <> p)})
+    then
+  begin
+    glBegin(GL_QUADS);
+      glTexCoord2f (0, 1);
+      glVertex3f(p2^.together^.corners [0].x, p2^.together^.corners [0].y, p2^.together^.corners [0].z);
+      glTexCoord2f (1, 1);
+      glVertex3f(p^.together^.corners [0].x, p^.together^.corners [0].y, p^.together^.corners [0].z);
+      glTexCoord2f (1, 0);
+      glVertex3f(p^.corners [numboc - 1].x, p^.corners [numboc - 1].y, p^.corners [numboc - 1].z);
+      glTexCoord2f (0, 0);
+      glVertex3f(p2^.corners [numboc - 1].x, p2^.corners [numboc - 1].y, p2^.corners [numboc - 1].z);
     glEnd;
     glBegin(GL_QUADS);
       glTexCoord2f (0, 0);

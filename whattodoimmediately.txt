@@ -3,3 +3,5 @@ Please, add new files to project: bass.pas is not uploaded yet.
 Problem fixed, i suppose. JD
 
 No. Please, upload source code. MB
+
+{Подскажите, какой прокси на wifi в миксе! У нас из окна слышно, но не зайти. МБ}

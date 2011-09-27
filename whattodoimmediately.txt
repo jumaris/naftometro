@@ -1,1 +1,3 @@
 Please, add new files to project: bass.pas is not uploaded yet.
+
+Problem fixed, i suppose. JD

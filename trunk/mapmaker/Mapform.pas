@@ -136,6 +136,12 @@ begin
       if (point[now].n1 = -1) then
         point[now].n1 := allt
       else
+      if (Tunnel[point[now].n1].ug < 0) then
+      begin
+        point[now].n2 := Point[now].n1;
+        point[now].n1 := allt;
+      end
+      else
         point[now].n2 := allt;
       point[allp].p1 := allt;
       point[allp].p2 := -1;
@@ -151,6 +157,12 @@ begin
       Tunnel[allt].en := now;
       if (point[now].p1 = -1) then
         point[now].p1 := allt
+      else
+      if (Tunnel[point[now].p1].ug < 0) then
+      begin
+        point[now].p2 := point[now].p1;
+        point[now].p1 := allt;
+      end
       else
         point[now].p2 := allt;
       point[allp].n1 := allt;
@@ -202,6 +214,12 @@ begin
       if (point[now].n1 = -1) then
         point[now].n1 := allt
       else
+      if (Tunnel[point[now].n1].ug < ugol) then
+      begin
+        point[now].n2 := Point[now].n1;
+        point[now].n1 := allt;
+      end
+      else
         point[now].n2 := allt;
       point[allp].p1 := allt;
       point[allp].p2 := -1;
@@ -216,6 +234,12 @@ begin
       Tunnel[allt].beg := allp;
       if (point[now].p1 = -1) then
         point[now].p1 := allt
+      else
+      if (Tunnel[point[now].p1].ug < ugol) then
+      begin
+        point[now].p2 := point[now].p1;
+        point[now].p1 := allt;
+      end
       else
         point[now].p2 := allt;
       point[allp].n1 := allt;
@@ -283,6 +307,26 @@ begin
   begin
     pbM.Canvas.TextOut(Round(point[i].x), pbM.Height - Round(Point[i].y) + 1, IntToStr(i));
     pbM.Canvas.MoveTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
+    if (point[i].ncs > 0) then
+    begin
+      pbM.Canvas.Pen.Width := 3;
+      pbM.Canvas.Pen.Color := $555555;
+      pbM.Canvas.LineTo(Round(Point[i].x + 15*cos(point[i].ug + 0.2617993)), pbM.Height - Round(point[i].y + 15*sin(point[i].ug + 0.2617993)));
+      pbM.Canvas.LineTo(Round(Point[i].x + 15*cos(point[i].ug - 0.2617993)), pbM.Height - Round(point[i].y + 15*sin(point[i].ug - 0.2617993)));
+      pbM.Canvas.LineTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
+      pbM.Canvas.Pen.Width := 5;
+      pbM.Canvas.Pen.Color := $0066ff;
+    end;
+    if (point[i].pcs > 0) then
+    begin
+      pbM.Canvas.Pen.Width := 3;
+      pbM.Canvas.Pen.Color := $555555;
+      pbM.Canvas.LineTo(Round(Point[i].x - 15*cos(point[i].ug + 0.2617993)), pbM.Height - Round(point[i].y - 15*sin(point[i].ug + 0.2617993)));
+      pbM.Canvas.LineTo(Round(Point[i].x - 15*cos(point[i].ug - 0.2617993)), pbM.Height - Round(point[i].y - 15*sin(point[i].ug - 0.2617993)));
+      pbM.Canvas.LineTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
+      pbM.Canvas.Pen.Width := 5;
+      pbM.Canvas.Pen.Color := $0066ff;
+    end;
     pbM.Canvas.LineTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
   end;
   pbM.Canvas.Pen.Width := 5;
@@ -411,7 +455,7 @@ begin
       begin
         if (point[Tunnel[i].en].p1 = i) then
         begin
-          outputer.sri(IntToStr(point[Tunnel[i].beg].pp2 - (round (tunnel [i].length) - j) + 1));
+          outputer.sri(IntToStr(point[Tunnel[i].en].pp2 - (round (tunnel [i].length) - j) + 1));
           Outputer.sri(IntToStr(tunnel[i].idst));
           if (Tunnel[i].ug > Tunnel[point[Tunnel[i].en].p2].ug) then
             outputer.sri('1')
@@ -420,7 +464,7 @@ begin
         end
         else
         begin
-          outputer.sri(IntToStr(point[Tunnel[i].beg].pp1 - (round (tunnel [i].length) - j) + 1));
+          outputer.sri(IntToStr(point[Tunnel[i].en].pp1 - (round (tunnel [i].length) - j) + 1));
           Outputer.sri(IntToStr(tunnel[i].idst));
           if (Tunnel[i].ug > Tunnel[point[Tunnel[i].en].p1].ug) then
             outputer.sri('1')
@@ -500,7 +544,7 @@ begin
       begin
         if (point[Tunnel[i].en].p1 = i) then
         begin
-          outputer.sri(IntToStr(point[Tunnel[i].beg].pp2 - (round (tunnel [i].length) - j) + 1));
+          outputer.sri(IntToStr(point[Tunnel[i].en].pp2 - (round (tunnel [i].length) - j) + 1));
           Outputer.sri(IntToStr(tunnel[i].idst));
           if (Tunnel[i].ug > Tunnel[point[Tunnel[i].en].p2].ug) then
             outputer.sri('1')
@@ -509,7 +553,7 @@ begin
         end
         else
         begin
-          outputer.sri(IntToStr(point[Tunnel[i].beg].pp1 - (round (tunnel [i].length) - j) + 1));
+          outputer.sri(IntToStr(point[Tunnel[i].en].pp1 - (round (tunnel [i].length) - j) + 1));
           Outputer.sri(IntToStr(tunnel[i].idst));
           if (Tunnel[i].ug > Tunnel[point[Tunnel[i].en].p1].ug) then
             outputer.sri('1')

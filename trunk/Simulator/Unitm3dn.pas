@@ -496,7 +496,7 @@ begin
   end;
 
   if (rup = -3) then
-    prs := max (prs, 0.5 - v/7);
+    prs := max (prs, 0.5 - abs (v/7));
 
   if isrp then
     polzunok := 0;
@@ -1098,9 +1098,9 @@ begin
       p := p^.next1;
       inc (dep);
     end;
-    if hrue <> nil then
-      RecConstQue(hrue, togdadep);
-    if  (dep < maxdep) and (p <> nil) and (p^.next1 <> nil) and (p^.next2 <> nil) then
+    if hrue <> nil then              //Постановка на прорисовку соседнего тоннеля
+      RecConstQue(hrue, togdadep);   //в камере съездов (перед расставанием тоннелей)
+    if  (dep < maxdep) and (p <> nil) and (p^.next1 <> nil) and (p^.next2 <> nil) then  //На развилке - по левому и правому пути
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1178,7 +1178,7 @@ begin
 
   if (p^.idstat <> 0) or (p2 = nil) or (p2^.idstat <> 0) then Exit;// Собственно пол не нужен
 
-  if (p^.together <> p) and (p2^.together = p2) and (not p^.isright) then
+  if (p^.together <> p) and (p2^.together = p2) and (p2^.previous1 = p2^.previous2) and (not p^.isright) then
   begin
     glBegin(GL_QUADS);            //Неправильная щель
       glTexCoord2f (0, 0);

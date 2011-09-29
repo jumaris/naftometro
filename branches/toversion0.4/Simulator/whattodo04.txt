@@ -1,0 +1,7 @@
+To version 0.4
+* Code structure
+* Animated cabine
+* Save/load of game
+* Good sounds
+* Game options (in menu)
+* etc

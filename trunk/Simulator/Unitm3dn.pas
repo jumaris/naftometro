@@ -1024,7 +1024,9 @@ begin
   end;
   c := bwgc (p);
   glColor3f(C * tubr, c * tubg, c * tubb);
-  if (p^.together = p) or (p^.isright) then
+  if ((p2^.together = p2) and (p^.together = p)) or
+  ((p^.isright) and (p^.together <> p)) or
+  ((p2^.isright) and (p2^.together <> p2)) then
     for i := 0 to numboc div 2 - 1 do
     begin
       glBegin(GL_QUADS);
@@ -1038,7 +1040,9 @@ begin
         glVertex3f(p2^.corners [i].x, p2^.corners [i].y, p2^.corners [i].z);
       glEnd;
     end;
-  if (p^.together = p) or (not p^.isright) then
+  if ((p2^.together = p2) and (p^.together = p)) or
+  ((not p^.isright) and (p^.together <> p)) or
+  ((not p2^.isright) and (p2^.together <> p2)) then
     for i := numboc div 2 to numboc - 2 do
     begin
       glBegin(GL_QUADS);
@@ -1178,6 +1182,25 @@ begin
 
   if (p^.idstat <> 0) or (p2 = nil) or (p2^.idstat <> 0) then Exit;// Собственно пол не нужен
 
+  if (p2^.together <> p2) and (p^.together = p) and (p^.next1 = p^.next2) and (not p2^.isright) then
+  begin
+    p3 := p2^.together^.previous1;
+
+    for i := 0 to numboc div 2 - 1 do  //Стенка в камере съездов
+    begin
+      glBegin(GL_QUADS);
+        glTexCoord2f (0, 0);
+        glVertex3f(p^.corners [i].x, p^.corners [i].y, p^.corners [i].z);
+        glTexCoord2f (0, 1);
+        glVertex3f(p^.corners [i + 1].x, p^.corners [i + 1].y, p^.corners [i + 1].z);
+        glTexCoord2f (1, 1);
+        glVertex3f(p3^.corners [numboc - i - 2].x, p3^.corners [numboc - i - 2].y, p3^.corners [numboc - i - 2].z);
+        glTexCoord2f (1, 0);
+        glVertex3f(p3^.corners [numboc - i - 1].x, p3^.corners [numboc - i - 1].y, p3^.corners [numboc - i - 1].z);
+      glEnd;
+    end;
+  end;
+
   if (p^.together <> p) and (p2^.together = p2) and (p2^.previous1 = p2^.previous2) and (not p^.isright) then
   begin
     glBegin(GL_QUADS);            //Неправильная щель
@@ -1229,7 +1252,7 @@ begin
   end;
 
   if ((p^.together = p) and (p2^.together = p2)) or
-     (not p2^.isright and (p2^.together <> p2){ and (p^.together <> p)})
+     (not p2^.isright and (p2^.together <> p2) and (p^.together <> p))
     then
   begin
     glBegin(GL_QUADS);

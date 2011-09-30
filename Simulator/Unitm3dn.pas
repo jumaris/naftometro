@@ -1026,7 +1026,8 @@ begin
   glColor3f(C * tubr, c * tubg, c * tubb);
   if ((p2^.together = p2) and (p^.together = p)) or
   ((p^.isright) and (p^.together <> p)) or
-  ((p2^.isright) and (p2^.together <> p2)) then
+  ((p2^.isright) and (p2^.together <> p2)) or
+  (p^.next1 <> p^.next2) then
     for i := 0 to numboc div 2 - 1 do
     begin
       glBegin(GL_QUADS);
@@ -1042,7 +1043,8 @@ begin
     end;
   if ((p2^.together = p2) and (p^.together = p)) or
   ((not p^.isright) and (p^.together <> p)) or
-  ((not p2^.isright) and (p2^.together <> p2)) then
+  ((not p2^.isright) and (p2^.together <> p2)) or
+  (p^.next1 <> p^.next2) then
     for i := numboc div 2 to numboc - 2 do
     begin
       glBegin(GL_QUADS);
@@ -1199,6 +1201,17 @@ begin
         glVertex3f(p3^.corners [numboc - i - 1].x, p3^.corners [numboc - i - 1].y, p3^.corners [numboc - i - 1].z);
       glEnd;
     end;
+
+    glBegin(GL_QUADS);            //Неправильная щель
+      glTexCoord2f (0, 0);
+      glVertex3f(p^.corners [numboc - 1].x, p^.corners [numboc - 1].y, p^.corners [numboc - 1].z);
+      glTexCoord2f (1, 0);
+      glVertex3f(p^.corners [0].x, p^.corners [0].y, p^.corners [0].z);
+      glTexCoord2f (1, 1);
+      glVertex3f(p3^.corners [numboc - 1].x, p3^.corners [numboc - 1].y, p3^.corners [numboc - 1].z);
+      glTexCoord2f (0, 1);
+      glVertex3f(p3^.corners [0].x, p3^.corners [0].y, p3^.corners [0].z);
+    glEnd;
   end;
 
   if (p^.together <> p) and (p2^.together = p2) and (p2^.previous1 = p2^.previous2) and (not p^.isright) then
@@ -1252,14 +1265,15 @@ begin
   end;
 
   if ((p^.together = p) and (p2^.together = p2)) or
-     (not p2^.isright and (p2^.together <> p2) and (p^.together <> p))
-    then
+     (not p2^.isright and (p2^.together <> p2)) or
+     (not p2^.isright and (p^.next1 <> p2)) or
+     (not p^.isright and (p <> p2^.previous1)) then
   begin
     glBegin(GL_QUADS);
       glTexCoord2f (0, 1);
       glVertex3f(p2^.together^.corners [0].x, p2^.together^.corners [0].y, p2^.together^.corners [0].z);
       glTexCoord2f (1, 1);
-      glVertex3f(p^.together^.corners [0].x, p^.together^.corners [0].y, p^.together^.corners [0].z);
+      glVertex3f(p2^.together^.Previous1^.corners [0].x, p2^.together^.Previous1^.corners [0].y, p2^.together^.Previous1^.corners [0].z);
       glTexCoord2f (1, 0);
       glVertex3f(p^.corners [numboc - 1].x, p^.corners [numboc - 1].y, p^.corners [numboc - 1].z);
       glTexCoord2f (0, 0);
@@ -1269,7 +1283,7 @@ begin
       glTexCoord2f (0, 0);
       glVertex3f(p^.corners [numboc div 2].x, p^.corners [numboc div 2].y, p^.corners [numboc div 2].z);
       glTexCoord2f (0, 1);
-      glVertex3f(p^.together^.corners [numboc div 2].x, p^.together^.corners [numboc div 2].y, p^.together^.corners [numboc div 2].z);
+      glVertex3f(p2^.together^.Previous1^.corners [numboc div 2].x, p2^.together^.Previous1^.corners [numboc div 2].y, p2^.together^.Previous1^.corners [numboc div 2].z);
       glTexCoord2f (1, 1);
       glVertex3f(p2^.together^.corners [numboc div 2].x, p2^.together^.corners [numboc div 2].y, p2^.together^.corners [numboc div 2].z);
       glTexCoord2f (1, 0);

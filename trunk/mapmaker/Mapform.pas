@@ -72,6 +72,12 @@ type
     procedure btn6Click(Sender: TObject);
     procedure rb1Click(Sender: TObject);
     procedure btn5Click(Sender: TObject);
+    procedure pbMMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pbMMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure pbMMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
 
   public
@@ -82,8 +88,8 @@ var
   Form1: TForm1;
   point: array [0..1000] of TPoint;
   Tunnel: array [0..1000] of TTunnel;
-  now, allp, allt: Integer;
-  napr: Boolean;
+  now, allp, allt, x0, y0, mx, my: Integer;
+  napr, isdown: Boolean;
   outputer:TBlackbox;
   //ugol: Real;
 
@@ -107,6 +113,9 @@ begin
   allp:=1;
   allt:=0;
   now:=0;
+  x0 := 0;
+  y0 := 0;
+  isdown := False;
   napr:=true;
   //ugol:=0;
   outputer := TBlackbox.lego;
@@ -288,32 +297,32 @@ begin
       r := tunnel[i].rad;
       b := tunnel[i].beg;
       e := tunnel[i].en;
-      cx := Point[b].x - Sign(tunnel[i].ug)*r*sin(Point[b].ug);
-      cy := pbM.Height - Point[b].y - Sign(tunnel[i].ug)*r*cos(Point[b].ug);
+      cx := x0 + Point[b].x - Sign(tunnel[i].ug)*r*sin(Point[b].ug);
+      cy := y0 + pbM.Height - Point[b].y - Sign(tunnel[i].ug)*r*cos(Point[b].ug);
       if (tunnel[i].ug > 0) then
-        pbM.Canvas.Arc(Round(cx-r),Round(cy-r),Round(cx+r),Round(cy+r),Round(Point[b].x),pbM.Height - Round(Point[b].y),Round(Point[e].x), pbM.Height - Round(Point[e].y))
+        pbM.Canvas.Arc(Round(cx-r),Round(cy-r),Round(cx+r),Round(cy+r), x0 + Round(Point[b].x), y0 + pbM.Height - Round(Point[b].y), x0 + Round(Point[e].x), y0 + pbM.Height - Round(Point[e].y))
       else
-        pbM.Canvas.Arc(Round(cx-r),Round(cy-r),Round(cx+r),Round(cy+r),Round(Point[e].x),pbM.Height - Round(Point[e].y),Round(Point[b].x), pbM.Height - Round(Point[b].y));
+        pbM.Canvas.Arc(Round(cx-r),Round(cy-r),Round(cx+r),Round(cy+r), x0 + Round(Point[e].x), y0 + pbM.Height - Round(Point[e].y),x0 + Round(Point[b].x), y0 + pbM.Height - Round(Point[b].y));
     end
     else
     begin
-      pbM.Canvas.MoveTo(Round(point[tunnel[i].beg].x), pbM.Height - Round(point[tunnel[i].beg].y));
-      pbM.Canvas.LineTo(Round(point[tunnel[i].en].x), pbM.Height - Round(point[tunnel[i].en].y));
+      pbM.Canvas.MoveTo(x0 + Round(point[tunnel[i].beg].x), y0 + pbM.Height - Round(point[tunnel[i].beg].y));
+      pbM.Canvas.LineTo(x0 + Round(point[tunnel[i].en].x), y0 + pbM.Height - Round(point[tunnel[i].en].y));
     end;
   end;
   pbM.Canvas.Pen.Width := 5;
   pbM.Canvas.Pen.Color := $0066ff;
   for i:= 0 to allp - 1 do
   begin
-    pbM.Canvas.TextOut(Round(point[i].x), pbM.Height - Round(Point[i].y) + 1, IntToStr(i));
-    pbM.Canvas.MoveTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
+    pbM.Canvas.TextOut(x0 + Round(point[i].x), y0 + pbM.Height - Round(Point[i].y) + 1, IntToStr(i));
+    pbM.Canvas.MoveTo(x0 + Round(point[i].x), y0 + pbM.Height - Round(Point[i].y));
     if (point[i].ncs > 0) then
     begin
       pbM.Canvas.Pen.Width := 3;
       pbM.Canvas.Pen.Color := $555555;
-      pbM.Canvas.LineTo(Round(Point[i].x + 15*cos(point[i].ug + 0.2617993)), pbM.Height - Round(point[i].y + 15*sin(point[i].ug + 0.2617993)));
-      pbM.Canvas.LineTo(Round(Point[i].x + 15*cos(point[i].ug - 0.2617993)), pbM.Height - Round(point[i].y + 15*sin(point[i].ug - 0.2617993)));
-      pbM.Canvas.LineTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
+      pbM.Canvas.LineTo(x0 + Round(Point[i].x + 15*cos(point[i].ug + 0.2617993)), y0 + pbM.Height - Round(point[i].y + 15*sin(point[i].ug + 0.2617993)));
+      pbM.Canvas.LineTo(x0 + Round(Point[i].x + 15*cos(point[i].ug - 0.2617993)), y0 + pbM.Height - Round(point[i].y + 15*sin(point[i].ug - 0.2617993)));
+      pbM.Canvas.LineTo(x0 + Round(point[i].x), y0 + pbM.Height - Round(Point[i].y));
       pbM.Canvas.Pen.Width := 5;
       pbM.Canvas.Pen.Color := $0066ff;
     end;
@@ -321,26 +330,26 @@ begin
     begin
       pbM.Canvas.Pen.Width := 3;
       pbM.Canvas.Pen.Color := $555555;
-      pbM.Canvas.LineTo(Round(Point[i].x - 15*cos(point[i].ug + 0.2617993)), pbM.Height - Round(point[i].y - 15*sin(point[i].ug + 0.2617993)));
-      pbM.Canvas.LineTo(Round(Point[i].x - 15*cos(point[i].ug - 0.2617993)), pbM.Height - Round(point[i].y - 15*sin(point[i].ug - 0.2617993)));
-      pbM.Canvas.LineTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
+      pbM.Canvas.LineTo(x0 + Round(Point[i].x - 15*cos(point[i].ug + 0.2617993)), y0 + pbM.Height - Round(point[i].y - 15*sin(point[i].ug + 0.2617993)));
+      pbM.Canvas.LineTo(x0 + Round(Point[i].x - 15*cos(point[i].ug - 0.2617993)), y0 + pbM.Height - Round(point[i].y - 15*sin(point[i].ug - 0.2617993)));
+      pbM.Canvas.LineTo(x0 + Round(point[i].x), y0 + pbM.Height - Round(Point[i].y));
       pbM.Canvas.Pen.Width := 5;
       pbM.Canvas.Pen.Color := $0066ff;
     end;
-    pbM.Canvas.LineTo(Round(point[i].x), pbM.Height - Round(Point[i].y));
+    pbM.Canvas.LineTo(x0 + Round(point[i].x), y0 + pbM.Height - Round(Point[i].y));
   end;
   pbM.Canvas.Pen.Width := 5;
   if napr then
     pbM.Canvas.Pen.Color := $ffff00
   else
     pbM.Canvas.Pen.Color := $0000ff;
-  pbM.Canvas.MoveTo(Round(point[now].x), pbM.Height - Round(Point[now].y));
-  pbM.Canvas.LineTo(Round(point[now].x), pbM.Height - Round(Point[now].y));
+  pbM.Canvas.MoveTo(x0 + Round(point[now].x), y0 + pbM.Height - Round(Point[now].y));
+  pbM.Canvas.LineTo(x0 + Round(point[now].x), y0 + pbM.Height - Round(Point[now].y));
   pbM.Canvas.Pen.Width := 3;
   if napr then
-    pbM.Canvas.LineTo(Round(point[now].x) + Round(15*cos(point[now].ug)), pbM.Height - Round(Point[now].y) - Round(15*sin(point[now].ug)))
+    pbM.Canvas.LineTo(x0 + Round(point[now].x) + Round(15*cos(point[now].ug)), y0 + pbM.Height - Round(Point[now].y) - Round(15*sin(point[now].ug)))
   else
-    pbM.Canvas.LineTo(Round(point[now].x) - Round(15*cos(point[now].ug)), pbM.Height - Round(Point[now].y) + Round(15*sin(point[now].ug)));
+    pbM.Canvas.LineTo(x0 + Round(point[now].x) - Round(15*cos(point[now].ug)), y0 + pbM.Height - Round(Point[now].y) + Round(15*sin(point[now].ug)));
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -608,17 +617,17 @@ begin
     point[now].p2 := -1;
     point[now].pcs := 0;
   end;
-    
+
   Dec(allt);
   Dec(allp);
-  
+
   pbM.Repaint;
 end;
 
 procedure TForm1.rb2Click(Sender: TObject);
 begin
   napr := False;
-  pbM.Repaint; 
+  pbM.Repaint;
 end;
 
 procedure TForm1.btn6Click(Sender: TObject);
@@ -639,6 +648,34 @@ begin
     point[now].ncs := StrToInt(edt2.Text)
   else
     point[now].pcs := StrToInt(edt2.Text);
+  pbM.Repaint;
+end;
+
+procedure TForm1.pbMMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  isdown := True;
+  mx := X;
+  my := Y;
+end;
+
+procedure TForm1.pbMMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if isdown then
+  begin
+    x0 := x0 + X - mx;
+    y0 := y0 + Y - my;
+    mx := X;
+    my := Y;
+  end;
+  Pbm.Repaint;
+end;
+
+procedure TForm1.pbMMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  isdown := False;
   pbM.Repaint;
 end;
 

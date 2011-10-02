@@ -21,6 +21,9 @@ object Form1: TForm1
     Width = 563
     Height = 525
     Align = alClient
+    OnMouseDown = pbMMouseDown
+    OnMouseMove = pbMMouseMove
+    OnMouseUp = pbMMouseUp
     OnPaint = pbMPaint
   end
   object Panel1: TPanel

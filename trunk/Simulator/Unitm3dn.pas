@@ -892,7 +892,10 @@ end;
 
 function TMainForm.bwgc(p: PTp): real;
 begin
-  result := 1 / (1.5 + sqr (wtf.givelto(p) / delit));
+  if (p^.idstat <> 0) then
+    result := 1 / (1.5 + sqr (Min(wtf.givelto(p), p^.ltostat) / delit))
+  else
+    result := 1 / (1.5 + sqr (wtf.givelto(p) / delit));
 end;
 
 procedure TMainForm.setSmotrelka;
@@ -1018,10 +1021,10 @@ begin
   p2 := p^.next1;
   if (p2 = nil) then exit;
   if (p2^.idstat <> 0) or (p^.idstat <> 0) then
-  begin
     localidstat := max (p2^.idstat, p^.idstat);
+  if ((p2^.idstat <> 0) and (p2^.ltostat = 0)) or ((p^.idstat <> 0) and (p^.ltostat = 0)) then
     Exit;
-  end;
+
   c := bwgc (p);
   glColor3f(C * tubr, c * tubg, c * tubb);
   if ((p2^.together = p2) and (p^.together = p)) or
@@ -1182,7 +1185,7 @@ begin
       glEnd;
     end;
 
-  if (p^.idstat <> 0) or (p2 = nil) or (p2^.idstat <> 0) then Exit;// Собственно пол не нужен
+  if ((p^.idstat <> 0) and (p^.ltostat = 0))or (p2 = nil) or ((p2^.idstat <> 0) and (p^.ltostat = 0))then Exit;// Собственно пол не нужен
 
   if (p2^.together <> p2) and (p^.together = p) and (p^.next1 = p^.next2) and (not p2^.isright) then
   begin
@@ -1461,6 +1464,8 @@ begin
   wtf.constructstat;
   mmoLoadProg.Lines.Add('Рассчёт станций');
   wtf.realizestat;
+  mmoLoadProg.Lines.Add('Освещение тоннелей');
+  wtf.calclight (bwfirst);
 
   for i := 0 to wtf.nscb do
     mkgoodscb;

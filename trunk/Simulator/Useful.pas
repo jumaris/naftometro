@@ -13,7 +13,7 @@ const maxnwag = 100;
       shpalw = 2.2;
       msl = 0; //minscblight
       maxstatn = 100;
-
+      mll = 100; //Max light length
 type
   T3dc = record   //3d coords
     x:real;
@@ -36,6 +36,7 @@ type
     isright:boolean;
     id:integer;
     idstat:integer;
+    ltostat:integer;
     corners:array [0 .. numboc - 1] of T3dc;
     table:array [0 .. 3] of T3dc;
     shpala:array [0 .. 7] of T3dc;
@@ -105,6 +106,7 @@ type
   procedure wwp; //workwithparams
   procedure constructstat;
   procedure realizestat;
+  procedure calclight (start:PBwp);
   private
   public
     isleft:boolean;
@@ -480,6 +482,7 @@ begin
       a^.tp^.kurs := giveangle (a^.tp^.previous1^.cx, a^.tp^.previous1^.cy, a^.tp^.cx, a^.tp^.cy);
     calccorners (a^.tp);
     a^.tp^.scbid := -1;
+    a^.tp^.ltostat := 0;
     a := a^.next;
   end;
 
@@ -730,6 +733,51 @@ begin
       statrealpoin [i, j].y := statinstruct[k].y+tempx*sin(statinstruct[k].alpha)+tempy*cos(statinstruct[k].alpha);
       statrealpoin [i, j].z := statrealpoin [i, j].z + statinstruct [k].z;
     end;
+end;
+
+procedure Twtf.calclight(start: PBwp);
+var i, tmpl, tmpidstat:Integer;
+    p:PBwp;
+begin
+  for i := 0 to mll - 1 do
+  begin
+    p := start;
+    while p <> nil do
+    begin
+      if (p^.tp <> nil) and (p^.tp^.idstat = 0) then
+      begin
+        tmpl := mll;
+        tmpidstat := 0;
+        if (p^.tp^.next1 <> nil) and (p^.tp^.next1^.idstat <> 0) then
+        begin
+          tmpl := min (tmpl, p^.tp^.next1^.ltostat + 1);
+          tmpidstat := p^.tp^.next1^.idstat;
+        end;
+        if (p^.tp^.next2 <> nil) and (p^.tp^.next2^.idstat <> 0) then
+        begin
+          tmpl := min (tmpl, p^.tp^.next2^.ltostat + 1);
+          tmpidstat := p^.tp^.next2^.idstat;
+        end;
+        if (p^.tp^.previous1 <> nil) and (p^.tp^.previous1^.idstat <> 0) then
+        begin
+          tmpl := min (tmpl, p^.tp^.previous1^.ltostat + 1);
+          tmpidstat := p^.tp^.previous1^.idstat;
+        end;
+        if (p^.tp^.previous2 <> nil) and (p^.tp^.previous2^.idstat <> 0) then
+        begin
+          tmpl := min (tmpl, p^.tp^.previous2^.ltostat + 1);
+          tmpidstat := p^.tp^.previous2^.idstat;
+        end;
+
+        if tmpl < mll then
+        begin
+          p^.tp^.ltostat := tmpl;
+          p^.tp^.idstat := tmpidstat;
+        end;
+      end;
+      p := p^.next;
+    end;
+  end;
 end;
 
 end.

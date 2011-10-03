@@ -276,9 +276,9 @@ object MainForm: TMainForm
     object RP: TLabel
       Left = 8
       Top = 432
-      Width = 147
+      Width = 157
       Height = 20
-      Caption = ' '#1056#1077#1083#1077' '#1087#1077#1088#1075#1088#1091#1079#1082#1080'! '
+      Caption = ' '#1056#1077#1083#1077' '#1087#1077#1088#1077#1075#1088#1091#1079#1082#1080'! '
       Color = clRed
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clYellow

@@ -115,8 +115,8 @@ type
     givelimbycond:array [0 .. maxpok - 1] of real;
     Ptrain:array [0 .. maxnwag] of PTp;
     tr, camdopkurs, camdopalpha:real;
-    cabfactor, nscb, nwag, wlength:integer;
-    pheight, pwidth:real;
+    cabfactor, nscb, nwag, wlength, maxdep:integer;
+    pheight, pwidth, acc, valphacam, u:real;
     nstat:integer;
     uuueee:TShipLoader;
     scb:array [0 .. maxscb - 1] of TScb;
@@ -533,6 +533,14 @@ begin
     pheight := StrToFloat (c);
   if (b = 'pwidth') then
     pwidth := StrToFloat (c);
+  if (b = 'timeacceleration') or (b = 'time_acceleration') then
+    acc := StrToFloat (c);
+  if (b = 'valphacam') then
+    valphacam := StrToFloat (c);
+  if (b = 'drawdepth') or (b = 'draw_depth') then
+    maxdep := StrToInt (c);
+  if (b = 'u') or (b = 'voltage') then
+    u := StrToFloat (c);
   if (b = 'scb') then
     scbfile := c;
   if (b = 'map') then
@@ -568,7 +576,11 @@ begin
   wlength := 19;
   pheight := 4.4;
   pwidth := 4.16;
-  mapfile := 'input.naftomap';
+  acc := 1.5;
+  valphacam := 100;
+  maxdep := 100;
+  u := 825;
+  mapfile := 'output.naftomap';
 
   reset (f);
   while (not eof (f)) do

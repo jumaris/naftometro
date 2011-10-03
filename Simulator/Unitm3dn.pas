@@ -10,11 +10,9 @@ uses
   MPlayer, Bomj, Buttons, Bass;
 
 const mu = 0.25;                  //трение об рельсы
-      betamu = 0.003 ;            //Трение в осях
-      acc = 1.5;
+      betamu = 0.003;             //Трение в осях
       g = 9.8;                      //сила тяжести
       mwag = 32500;                 //масса вагона
-      u = 825;                      //Напруга
       amax = 1.2;                   //Максимальное ускорение, создаваемое движком
       amax1 = 1.2;                  // -//- в режиме торможения
       amax2 = 3;                    // -//- пневмотормозом
@@ -22,7 +20,6 @@ const mu = 0.25;                  //трение об рельсы
       pmin = 0.15;                  //
       kv = 0.05; //Velocity of kran pressuring
       kmv = 1; //Velocity of kran mooving
-      valphacam = 100;
       tubr = 1;
       tubg = 0.8;
       tubb = 0.6;
@@ -30,7 +27,6 @@ const mu = 0.25;                  //трение об рельсы
       rmax = 5;
       r0 = 0.01;
       IMAX = 350;
-      maxdep = 100;
       brakeconst = 100;
       bshamount = 17;
       dv = 0.00001; //Физически бесконечно малая скорость
@@ -190,7 +186,6 @@ begin
   delit := 10;
   itx := 0;
   climit := 80 / 3.6;
-  k := TiPhys.Interval / 1000 * acc;
   waiting := 0;
   isrp := false;
   ismenu := True;
@@ -462,7 +457,7 @@ begin
     f2 := givef (polzunok, v);
     if (f2 / mwag < amax) then
     begin
-      polzunwait := 0.3;
+      polzunwait := 0.2;
       inc (polzunok);
     end;
   end;
@@ -492,7 +487,7 @@ begin
   if ((rup = -3) and (polzunok > -bshamount) and (givebrakef(-polzunok, v) / mwag < amax1)) and (polzunwait < 0) then
   begin
     dec (polzunok);
-    polzunwait := 0.3;
+    polzunwait := 0.2;
   end;
 
   if (rup = -3) then
@@ -573,13 +568,13 @@ begin
       v := 0;
 
   if Mykeys.mr then                                             //Поворот камеры
-    wtf.camdopkurs := wtf.camdopkurs - k * valphacam;
+    wtf.camdopkurs := wtf.camdopkurs - k * wtf.valphacam;
   if Mykeys.ml then
-    wtf.camdopkurs := wtf.camdopkurs + k * valphacam;
+    wtf.camdopkurs := wtf.camdopkurs + k * wtf.valphacam;
   if Mykeys.mu then
-    wtf.camdopalpha := wtf.camdopalpha + k * valphacam;
+    wtf.camdopalpha := wtf.camdopalpha + k * wtf.valphacam;
   if Mykeys.md then
-    wtf.camdopalpha := wtf.camdopalpha - k * valphacam;
+    wtf.camdopalpha := wtf.camdopalpha - k * wtf.valphacam;
 
   //Всякие звуки
   Zvuchi;
@@ -611,7 +606,7 @@ const hereTruthIs=true;
 begin
   case Key of
 
-    Key_W:  mykeys.fw := hereTruthIs;
+    Key_W:  mykeys.fw := hereTruthIs;  
     Key_S:  mykeys.bw := hereTruthIs;
     Key_D:  mykeys.up := hereTruthIs;
     Key_A:  mykeys.down := hereTruthIs;
@@ -873,16 +868,16 @@ end;
 
 function TMainForm.givef(i: integer; v: real): real;
 begin
-  result := sqr (U / (hz [i].r + hz [i].kbeta * beta0 * abs (v)) ) * hz[i].kbeta * beta0; // I^2 * (R / v)
+  result := sqr (wtf.U / (hz [i].r + hz [i].kbeta * beta0 * abs (v)) ) * hz[i].kbeta * beta0; // I^2 * (R / v)
 end;
 
 function TMainForm.givei(i: integer; v: real): real;
 begin
   if (i > 0) then
     if hz [i-1].ispp then
-      result := U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v)) / 2
+      result := wtf.U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v)) / 2
     else
-      result := U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v))
+      result := wtf.U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v))
   else
     if (i < 0) and (Abs (v) > brakehz [-i-1].vmin)then
       result := (abs (v) - brakehz [-i-1].vmin) * brakeconst * brakehz [-i-1].kbeta / brakehz [-i-1].R / 2 //U / R, ispp
@@ -1086,7 +1081,7 @@ begin
     hrue := nil;
     while (pp^.next <> nil) do
       pp := pp^.next;
-    while (dep < maxdep) and (p <> nil) and (p^.next1 = p^.next2) do
+    while (dep < wtf.maxdep) and (p <> nil) and (p^.next1 = p^.next2) do
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1109,7 +1104,7 @@ begin
     end;
     if hrue <> nil then              //Постановка на прорисовку соседнего тоннеля
       RecConstQue(hrue, togdadep);   //в камере съездов (перед расставанием тоннелей)
-    if  (dep < maxdep) and (p <> nil) and (p^.next1 <> nil) and (p^.next2 <> nil) then  //На развилке - по левому и правому пути
+    if  (dep < wtf.maxdep) and (p <> nil) and (p^.next1 <> nil) and (p^.next2 <> nil) then  //На развилке - по левому и правому пути
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1125,7 +1120,7 @@ begin
     hrue := nil;
     while (pp^.next <> nil) do
       pp := pp^.next;
-    while (dep < maxdep) and (p <> nil) and (p^.previous1 = p^.previous2) do
+    while (dep < wtf.maxdep) and (p <> nil) and (p^.previous1 = p^.previous2) do
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1148,7 +1143,7 @@ begin
     end;
     if hrue <> nil then
       RecConstQue(hrue, togdadep);
-    if  (dep < maxdep) and (p <> nil) and (p^.previous1 <> nil) and (p^.previous2 <> nil) then
+    if  (dep < wtf.maxdep) and (p <> nil) and (p^.previous1 <> nil) and (p^.previous2 <> nil) then
     begin
       new (pp^.next);
       pp := pp^.next;
@@ -1369,7 +1364,10 @@ begin
   ismenu := false;
   validateonmenu;
   if nadoload then
+  begin
     LoadGame;
+    k := TiPhys.Interval / 1000 * wtf.acc;
+  end;
 end;
 
 procedure TMainForm.btnKeysClick(Sender: TObject);
@@ -1479,7 +1477,7 @@ end;
 function TMainForm.givei2(i: integer; v: real): real;
 begin
   if (i > 0) then
-    result := U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v))
+    result := wtf.U / (hz [i-1].r + hz [i-1].kbeta * beta0 * abs (v))
   else
     if (i < 0) and (Abs (v) > brakehz [-i-1].vmin)then
       result := (abs (v) - brakehz [-i-1].vmin) * brakeconst * brakehz [-i-1].kbeta / brakehz [-i-1].R //U / R

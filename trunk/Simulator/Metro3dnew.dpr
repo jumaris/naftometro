@@ -4,8 +4,8 @@ uses
   Forms,
   Unitm3dn in 'Unitm3dn.pas' {MainForm},
   Useful in 'Useful.pas',
-  Bomj in 'Bomj.pas';
-
+  Bomj in 'Bomj.pas',
+  MyKeyConsts in 'MyKeyConsts.pas';
 
 {$R *.res}
 

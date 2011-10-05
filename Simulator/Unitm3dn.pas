@@ -6,8 +6,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, Qt, Math, ComCtrls, useful, dglOpenGL, OpenGL,
-  MPlayer, Bomj, Buttons, Bass;
+  Dialogs, ExtCtrls, StdCtrls, Math, ComCtrls, useful, dglOpenGL, OpenGL,
+  MPlayer, Bomj, Buttons, Bass, MyKeyConsts;
 
 const mu = 0.25;                  //трение об рельсы
       betamu = 0.003;             //Трение в осях

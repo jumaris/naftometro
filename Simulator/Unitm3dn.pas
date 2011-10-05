@@ -937,7 +937,7 @@ end;
 
 procedure TMainForm.CalcRealPoints;
 var i:integer;
-    x, y, kurs, z:Real;
+    x, y, kurs, angle, z:Real;
 begin
   if wtf.cabfactor=1 then
   begin
@@ -952,14 +952,15 @@ begin
     z := wtf.givebz(wtf.ptrain [wtf.nwag]);
   end;
   kurs := wtf.givecamkurs - wtf.camdopkurs;
-  for i := 0 to npoin - 1 do   //??????? ????? ? ???? ?? ?????? ??????
+  angle := (wtf.givecamalpha - wtf.camdopalpha) / 180 * pi;
+  for i := 0 to npoin - 1 do
   begin
     realpoin [i].x := x;
     realpoin [i].y := y;
 
-    MovePoint(realpoin [i], kurs, Poin [i].x);
+    MovePoint(realpoin [i], kurs, Poin [i].x * cos (angle) - poin [i].z * sin (angle));
     MovePoint(realpoin [i], kurs + 90, Poin [i].y);
-    realpoin [i].z := poin [i].z + z;
+    realpoin [i].z := poin [i].z * cos (angle) + z + poin [i].x * sin (angle);
   end;
 end;
 

@@ -1,8 +1,8 @@
 object Form1: TForm1
-  Left = 365
-  Top = 114
-  Width = 764
-  Height = 563
+  Left = 305
+  Top = 38
+  Width = 937
+  Height = 714
   Caption = 'Form1'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,8 +18,8 @@ object Form1: TForm1
   object pbM: TPaintBox
     Left = 0
     Top = 0
-    Width = 563
-    Height = 525
+    Width = 736
+    Height = 676
     Align = alClient
     OnMouseDown = pbMMouseDown
     OnMouseMove = pbMMouseMove
@@ -27,10 +27,10 @@ object Form1: TForm1
     OnPaint = pbMPaint
   end
   object Panel1: TPanel
-    Left = 563
+    Left = 736
     Top = 0
     Width = 185
-    Height = 525
+    Height = 676
     Align = alRight
     TabOrder = 0
     object lbl1: TLabel
@@ -81,6 +81,34 @@ object Form1: TForm1
       Width = 71
       Height = 13
       Caption = #1053#1072#1087#1088#1072#1074#1083#1077#1085#1080#1077':'
+    end
+    object lbl8: TLabel
+      Left = 32
+      Top = 560
+      Width = 82
+      Height = 13
+      Caption = #1058#1077#1082#1091#1097#1072#1103' '#1090#1086#1095#1082#1072':'
+    end
+    object lbl9: TLabel
+      Left = 32
+      Top = 576
+      Width = 10
+      Height = 13
+      Caption = 'x:'
+    end
+    object lbl10: TLabel
+      Left = 32
+      Top = 593
+      Width = 10
+      Height = 13
+      Caption = 'y:'
+    end
+    object lbl11: TLabel
+      Left = 32
+      Top = 608
+      Width = 9
+      Height = 13
+      Caption = 'z:'
     end
     object btn1: TButton
       Left = 16

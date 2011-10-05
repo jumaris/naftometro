@@ -61,6 +61,10 @@ type
     lbl7: TLabel;
     rb1: TRadioButton;
     rb2: TRadioButton;
+    lbl8: TLabel;
+    lbl9: TLabel;
+    lbl10: TLabel;
+    lbl11: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure btn1Click(Sender: TObject);
     procedure btn2Click(Sender: TObject);
@@ -122,8 +126,8 @@ begin
 end;
 
 procedure TForm1.btn1Click(Sender: TObject);
-var ugol, l, n:Real;
-    id:Integer;
+var ugol, l, n, x, y, z:Real;
+    id, next, i:Integer;
 begin
   if ((napr and (point[now].n1 <> -1) and (point[now].n2 <> -1)) or ((not napr) and (point[now].p1 <> -1) and (point[now].p2 <> -1))) then
     ShowMessage('Не жадничай!')
@@ -137,11 +141,34 @@ begin
     l := StrToFloat(edt1.Text);
     n := StrToFloat(se1.Text)*0.001;
     id := StrToInt(Edit1.Text);
+    if napr then
+    begin
+      x := point[now].x + l*cos(ugol);
+      y := point[now].y + l*sin(ugol);
+      z := Point[now].z + l*n;
+    end
+    else
+    begin
+      x := point[now].x - l*cos(ugol);
+      y := point[now].y - l*sin(ugol);
+      z := Point[now].z - l*n;
+    end;
+    next := allp;
+    for i:=0 to allp - 1 do
+      if ((Abs(point[i].x - x) < 1) and (Abs(point[i].y - y) < 1) and(Abs(Point[i].z - z) < 1) and
+         (Abs(sin(point[i].ug) - Sin(ugol)) < 0.01) and (Abs(cos(point[i].ug) - cos(ugol)) < 0.01)) then
+        if (napr and (point[i].p1 <> -1) and (point[i].p2 <> -1)) or ((not napr) and (point[i].n1 <> -1) and (point[i].n2 <> -1)) then
+        begin
+          ShowMessage('Занято!');
+          Exit;
+        end
+        else
+          next := i;
     Edit1.Text := '0';
     if napr then
     begin
       Tunnel[allt].beg := now;
-      Tunnel[allt].en := allp;
+      Tunnel[allt].en := next;
       if (point[now].n1 = -1) then
         point[now].n1 := allt
       else
@@ -152,17 +179,28 @@ begin
       end
       else
         point[now].n2 := allt;
-      point[allp].p1 := allt;
-      point[allp].p2 := -1;
-      point[allp].n1 := -1;
-      point[allp].n2 := -1;
-      point[allp].x := point[now].x + l*cos(ugol);
-      point[allp].y := point[now].y + l*sin(ugol);
-      point[allp].z := Point[now].z + l*n;
+      if next = allp then
+      begin
+        point[allp].p1 := allt;
+        point[allp].p2 := -1;
+        point[allp].n1 := -1;
+        point[allp].n2 := -1;
+      end
+      else
+      if (point[next].p1 = -1) then
+        point[next].p1 := allt
+      else
+      if (Tunnel[point[next].p1].ug < 0) then
+      begin
+        point[next].p2 := point[next].p1;
+        point[next].p1 := allt;
+      end
+      else
+        point[next].p2 := allt;
     end
     else
     begin
-      Tunnel[allt].beg := allp;
+      Tunnel[allt].beg := next;
       Tunnel[allt].en := now;
       if (point[now].p1 = -1) then
         point[now].p1 := allt
@@ -174,25 +212,42 @@ begin
       end
       else
         point[now].p2 := allt;
-      point[allp].n1 := allt;
-      point[allp].n2 := -1;
-      point[allp].p1 := -1;
-      point[allp].p2 := -1;
-      point[allp].x := point[now].x - l*cos(ugol);
-      point[allp].y := point[now].y - l*sin(ugol);
-      point[allp].z := Point[now].z - l*n;
+      if next = allp then
+      begin
+        point[allp].n1 := allt;
+        point[allp].n2 := -1;
+        point[allp].p1 := -1;
+        point[allp].p2 := -1;
+      end
+      else
+      if (point[next].n1 = -1) then
+        point[next].n1 := allt
+      else
+      if (Tunnel[point[next].n1].ug < 0) then
+      begin
+        point[next].n2 := Point[next].n1;
+        point[next].n1 := allt;
+      end
+      else
+        point[next].n2 := allt;
     end;
     point[now].idst := id;
-    point[allp].idst := id;
+    point[next].idst := id;
     Tunnel[allt].idst := id;
-    point[allp].ug := ugol;
-    point[allp].ncs := 0;
-    point[allp].pcs := 0;
+    if next = allp then
+    begin
+      point[allp].x := x;
+      point[allp].y := y;
+      point[allp].z := z;
+      point[allp].ug := ugol;
+      point[allp].ncs := 0;
+      point[allp].pcs := 0;
+      Inc(allp);
+    end;
     Tunnel[allt].length := l;
     Tunnel[allt].nakl := n;
     Tunnel[allt].ug := 0;
-    now:=allp;
-    Inc(allp);
+    now:=next;
     Inc(allt);
     pbM.Repaint;
   end;
@@ -200,8 +255,8 @@ end;
 
 
 procedure TForm1.btn2Click(Sender: TObject);
-var ugol, r, n:Real;
-    id:Integer;
+var ugol, r, n, x, y, z, ug:Real;
+    id, i, next:Integer;
 begin
   if ((napr and (point[now].n1 <> -1) and (point[now].n2 <> -1)) or ((not napr) and (point[now].p1 <> -1) and (point[now].p2 <> -1))) then
     ShowMessage('Не жадничай!')
@@ -215,11 +270,35 @@ begin
     r := StrToFloat(edt3.text);
     n := StrToFloat(se1.Text)*0.001;
     id := StrToInt(Edit1.Text);
+    if napr then
+    begin
+      ug := Point[now].ug + ugol;
+      z := point[now].z + r*abs(ugol)*n;
+    end
+    else
+    begin
+      ug := Point[now].ug - ugol;
+      z := point[now].z - r*abs(ugol)*n;
+    end;
+    x := Point[now].x - Sign(ugol)*r*sin(Point[now].ug) + Sign(ugol)*r*sin(ug);
+    y := Point[now].y + Sign(ugol)*r*cos(Point[now].ug) - Sign(ugol)*r*cos(ug);
+
+    next := allp;
+    for i:=0 to allp - 1 do
+      if ((Abs(point[i].x - x) < 1) and (Abs(point[i].y - y) < 1) and(Abs(Point[i].z - z) < 1) and
+         (Abs(sin(point[i].ug) - Sin(ug)) < 0.01) and (Abs(cos(point[i].ug) - cos(ug)) < 0.01)) then
+        if (napr and (point[i].p1 <> -1) and (point[i].p2 <> -1)) or ((not napr) and (point[i].n1 <> -1) and (point[i].n2 <> -1)) then
+        begin
+          ShowMessage('Занято!');
+          Exit;
+        end
+        else
+          next := i;
     Edit1.Text := '0';
     if napr then
     begin
       Tunnel[allt].beg := now;
-      Tunnel[allt].en := allp;
+      Tunnel[allt].en := next;
       if (point[now].n1 = -1) then
         point[now].n1 := allt
       else
@@ -230,17 +309,30 @@ begin
       end
       else
         point[now].n2 := allt;
-      point[allp].p1 := allt;
-      point[allp].p2 := -1;
-      point[allp].n1 := -1;
-      point[allp].n2 := -1;
-      point[allp].ug := Point[now].ug + ugol;
-      point[allp].z := point[now].z + r*abs(ugol)*n;
+
+      if next = allp then
+      begin
+        point[allp].p1 := allt;
+        point[allp].p2 := -1;
+        point[allp].n1 := -1;
+        point[allp].n2 := -1;
+      end
+      else
+      if (point[next].p1 = -1) then
+        point[next].p1 := allt
+      else
+      if (Tunnel[point[next].p1].ug < 0) then
+      begin
+        point[next].p2 := point[next].p1;
+        point[next].p1 := allt;
+      end
+      else
+        point[next].p2 := allt;
     end
     else
     begin
       Tunnel[allt].en := now;
-      Tunnel[allt].beg := allp;
+      Tunnel[allt].beg := next;
       if (point[now].p1 = -1) then
         point[now].p1 := allt
       else
@@ -251,26 +343,43 @@ begin
       end
       else
         point[now].p2 := allt;
-      point[allp].n1 := allt;
-      point[allp].n2 := -1;
-      point[allp].p1 := -1;
-      point[allp].p2 := -1;
-      point[allp].ug := Point[now].ug - ugol;
-      point[allp].z := point[now].z - r*abs(ugol)*n;
+      if next = allp then
+      begin
+        point[allp].n1 := allt;
+        point[allp].n2 := -1;
+        point[allp].p1 := -1;
+        point[allp].p2 := -1;
+      end
+      else
+      if (point[next].n1 = -1) then
+        point[next].n1 := allt
+      else
+      if (Tunnel[point[next].n1].ug < 0) then
+      begin
+        point[next].n2 := Point[next].n1;
+        point[next].n1 := allt;
+      end
+      else
+        point[next].n2 := allt;
     end;
-    point[allp].x := Point[now].x - Sign(ugol)*r*sin(Point[now].ug) + Sign(ugol)*r*sin(Point[allp].ug);
-    point[allp].y := Point[now].y + Sign(ugol)*r*cos(Point[now].ug) - Sign(ugol)*r*cos(Point[allp].ug);
-    point[now].idst := id;
-    point[allp].idst := id;
-    point[allp].ncs := 0;
-    point[allp].pcs := 0;
+    if next = allp then
+    begin
+      point[allp].x := x;
+      point[allp].y := y;
+      point[allp].z := z;
+      point[allp].ug := ug;
+      point[allp].ncs := 0;
+      point[allp].pcs := 0;
+      Inc(allp);
+    end;
+    
+    point[next].idst := id;
     Tunnel[allt].idst := id;
     Tunnel[allt].rad := r;
     Tunnel[allt].ug := ugol;
     Tunnel[allt].length := r*abs(ugol);
     Tunnel[allt].nakl := n;
-    now:=allp;
-    Inc(allp);
+    now:=next;
     Inc(allt);
     pbM.Repaint;
   end;
@@ -350,6 +459,10 @@ begin
     pbM.Canvas.LineTo(x0 + Round(point[now].x) + Round(15*cos(point[now].ug)), y0 + pbM.Height - Round(Point[now].y) - Round(15*sin(point[now].ug)))
   else
     pbM.Canvas.LineTo(x0 + Round(point[now].x) - Round(15*cos(point[now].ug)), y0 + pbM.Height - Round(Point[now].y) + Round(15*sin(point[now].ug)));
+  lbl8.Caption := 'Текущая точка: ' + IntToStr(now);
+  lbl9.Caption := 'x: ' + FloatToStr(point[now].x);
+  lbl10.Caption := 'y: ' + FloatToStr(point[now].y);
+  lbl11.Caption := 'z: ' + FloatToStr(point[now].z);
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -600,27 +713,23 @@ begin
 end;
 
 procedure TForm1.btn4Click(Sender: TObject);
+var b, e:Integer;
 begin
-  if (Tunnel[allt].en = allp) then
-  begin
-    now:= tunnel[allt].beg;
-    if (point[now].n2 <> allt) then
-      point[now].n1 := Point[now].n2;
-    point[now].n2 := -1;
-    point[now].ncs := 0;
-  end
-  else
-  begin
-    now:= tunnel[allt].en;
-    if (point[now].p2 <> allt) then
-      point[now].p1 := Point[now].p2;
-    point[now].p2 := -1;
-    point[now].pcs := 0;
-  end;
-
+  b := Tunnel[allt].beg;
+  e := Tunnel[allt].en;
+  if (point[b].n2 <> allt) then
+    point[b].n1 := Point[b].n2;
+  point[b].n2 := -1;
+  point[b].ncs := 0;
+  if (point[e].p2 <> allt) then
+    point[e].p1 := Point[e].p2;
+  point[e].p2 := -1;
+  point[e].pcs := 0;
+  if (b = allp-1) and (point[b].n1 = -1) and (point[b].p1 = -1) and (point[b].p2 = -1) then
+    Dec(allp);
+  if (e = allp-1) and (point[e].p1 = -1) and (point[e].n1 = -1) and (point[e].n2 = -1) then
+    Dec(allp);
   Dec(allt);
-  Dec(allp);
-
   pbM.Repaint;
 end;
 
@@ -668,8 +777,8 @@ begin
     y0 := y0 + Y - my;
     mx := X;
     my := Y;
+    pbM.Repaint;
   end;
-  Pbm.Repaint;
 end;
 
 procedure TForm1.pbMMouseUp(Sender: TObject; Button: TMouseButton;

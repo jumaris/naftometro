@@ -749,9 +749,17 @@ var bwa:PBWp;
 begin
   zafigachtexturu(16);
   new (queuestart);
-  queuestart^.tp := wtf.ptrain [1]^.previous1;
   queuestart^.next := nil;
-  RecConstQue(wtf.ptrain [1], 0);
+  if wtf.cabfactor = 1 then
+  begin
+    queuestart^.tp := wtf.ptrain [1]^.previous1;
+    RecConstQue(wtf.ptrain [1], 0);
+  end
+  else
+  begin
+    queuestart^.tp := wtf.ptrain [wtf.nwag - 1]^.next1;
+    RecConstQue(wtf.ptrain [wtf.nwag - 1], 0);
+  end;
   SimpQue;
 
   bwa := queuestart;

@@ -2,5 +2,3 @@ To version 0.3
 * Good manuals
 * Increase amount of parameters (params.naftometro)
 * Train properties in file (needed?)
-* SCB passage bug fix
-* Light from stations

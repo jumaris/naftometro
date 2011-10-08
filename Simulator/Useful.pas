@@ -13,7 +13,7 @@ const maxnwag = 100;
       shpalw = 2.2;
       msl = 0; //minscblight
       maxstatn = 100;
-      mll = 100; //Max light length
+      mll = 200; //Max light length
 type
   T3dc = record   //3d coords
     x:real;

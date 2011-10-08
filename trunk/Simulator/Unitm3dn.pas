@@ -1102,7 +1102,7 @@ begin
         pp := pp^.next;
         pp^.next := nil;
         pp^.tp := p^.together;
-        if (p^.next1^.together = p^.next1) then
+        if (hrue = nil) and (p^.next1^.together = p^.next1) then
         begin
           hrue := p^.together^.next1;
           togdadep := dep;
@@ -1141,7 +1141,7 @@ begin
         pp := pp^.next;
         pp^.next := nil;
         pp^.tp := p^.together;
-        if (p^.previous1^.together = p^.previous1) then
+        if (hrue = nil) and (p^.previous1^.together = p^.previous1) then
         begin
           hrue := p^.together^.previous1;
           togdadep := dep;

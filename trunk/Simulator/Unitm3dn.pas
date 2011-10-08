@@ -628,7 +628,7 @@ begin
             strelochka;
             for i := 0 to wtf.nscb do
               mkgoodscb;
-            oldhz := wtf.gnscbid(wtf.ptrain [0], wtf.isleft);    //Исправить!!!
+            oldhz := wtf.gntrscbid; //Работает?
           end;
     Key_B: if delit >  3 then delit := delit - 5;
     Key_N: if delit < 10 then delit := delit + 5;

@@ -1189,7 +1189,7 @@ begin
       glEnd;
     end;
 
-  if ((p^.idstat <> 0) and (p^.ltostat = 0))or (p2 = nil) or ((p2^.idstat <> 0) and (p^.ltostat = 0))then Exit;// Собственно пол не нужен
+  if ((p^.idstat <> 0) and (p^.ltostat = 0)) or (p2 = nil) or ((p2^.idstat <> 0) and (p2^.ltostat = 0)) then Exit;// Собственно пол не нужен
 
   if (p2^.together <> p2) and (p^.together = p) and (p^.next1 = p^.next2) and (not p2^.isright) then
   begin
@@ -1396,7 +1396,7 @@ var p2:PTp;
     c:Real;
 begin
   if p = nil then Exit;
-  p2 := p^.next2;
+  p2 := p^.next1;
   if p2 = nil then Exit;
   c := bwgc(p);
   glColor3f(c * tubr, c * tubg, c * tubb);

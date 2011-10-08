@@ -157,6 +157,7 @@ begin
     for i:=0 to allp - 1 do
       if ((Abs(point[i].x - x) < 1) and (Abs(point[i].y - y) < 1) and(Abs(Point[i].z - z) < 1) and
          (Abs(sin(point[i].ug) - Sin(ugol)) < 0.01) and (Abs(cos(point[i].ug) - cos(ugol)) < 0.01)) then
+      begin
         if (napr and (point[i].p1 <> -1) and (point[i].p2 <> -1)) or ((not napr) and (point[i].n1 <> -1) and (point[i].n2 <> -1)) then
         begin
           ShowMessage('Занято!');
@@ -164,6 +165,7 @@ begin
         end
         else
           next := i;
+      end;
     Edit1.Text := '0';
     if napr then
     begin
@@ -715,21 +717,35 @@ end;
 procedure TForm1.btn4Click(Sender: TObject);
 var b, e:Integer;
 begin
-  b := Tunnel[allt].beg;
-  e := Tunnel[allt].en;
-  if (point[b].n2 <> allt) then
+  b := Tunnel[allt-1].beg;
+  e := Tunnel[allt-1].en;
+  if (point[b].n2 = allt-1) then
+    Point[b].n2 := -1
+  else
+  begin
     point[b].n1 := Point[b].n2;
-  point[b].n2 := -1;
+    Point[b].n2 := -1;
+  end;
   point[b].ncs := 0;
-  if (point[e].p2 <> allt) then
+  if (point[e].p2 = allt-1) then
+    point[e].p2 := -1
+  else
+  begin
     point[e].p1 := Point[e].p2;
-  point[e].p2 := -1;
+    point[e].p2 := -1;
+  end;
   point[e].pcs := 0;
-  if (b = allp-1) and (point[b].n1 = -1) and (point[b].p1 = -1) and (point[b].p2 = -1) then
+  if ((b = allp-1) and (point[b].n1 = -1) and (point[b].p1 = -1) and (point[b].p2 = -1)) then
+  begin
     Dec(allp);
-  if (e = allp-1) and (point[e].p1 = -1) and (point[e].n1 = -1) and (point[e].n2 = -1) then
+    now := e;
+  end;
+  if ((e = allp-1) and (point[e].p1 = -1) and (point[e].n1 = -1) and (point[e].n2 = -1)) then
+  begin
     Dec(allp);
-  Dec(allt);
+    now := b;
+  end;
+    Dec(allt);
   pbM.Repaint;
 end;
 

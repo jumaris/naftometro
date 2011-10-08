@@ -107,6 +107,7 @@ type
   procedure constructstat;
   procedure realizestat;
   procedure calclight (start:PBwp);
+  procedure calcallcorners (start:PBwp);
   private
   public
     isleft:boolean;
@@ -199,7 +200,7 @@ end;
 
 procedure Twtf.calccorners(var p: PTp);
 var zkurs, dkurs, rad:real;
-    i:integer;
+    i, lrscbf:integer;   //left-right scb factor
 //zero kurs, deltakurs, radius
 begin
   zkurs := -1 * arctan (pheight / pwidth);
@@ -214,17 +215,23 @@ begin
 { 01
   32
 }
-  p.table [0].x := p.cx - sin (p.kurs) * pwidth / 2;
-  p.table [0].y := p.cy + cos (p.kurs) * pwidth / 2;
+
+  if (p^.scbid >= 0) and scb [p^.scbid].right then
+    lrscbf := -1
+  else
+    lrscbf := 1;
+
+  p.table [0].x := p.cx - sin (p.kurs) * pwidth / 2 * lrscbf;
+  p.table [0].y := p.cy + cos (p.kurs) * pwidth / 2 * lrscbf;
   p.table [0].z := p.cz + theight / 2;
-  p.table [3].x := p.cx - sin (p.kurs) * pwidth / 2;
-  p.table [3].y := p.cy + cos (p.kurs) * pwidth / 2;
+  p.table [3].x := p.cx - sin (p.kurs) * pwidth / 2 * lrscbf;
+  p.table [3].y := p.cy + cos (p.kurs) * pwidth / 2 * lrscbf;
   p.table [3].z := p.cz - theight / 2;
-  p.table [1].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth);
-  p.table [1].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth);
+  p.table [1].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
+  p.table [1].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
   p.table [1].z := p.cz + theight / 2;
-  p.table [2].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth);
-  p.table [2].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth);
+  p.table [2].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
+  p.table [2].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
   p.table [2].z := p.cz - theight / 2;
 
   //Ох, шпала...
@@ -480,7 +487,6 @@ begin
       a^.tp^.kurs := giveangle (a^.tp^.cx, a^.tp^.cy, a^.tp^.next1^.cx, a^.tp^.next1^.cy)
     else
       a^.tp^.kurs := giveangle (a^.tp^.previous1^.cx, a^.tp^.previous1^.cy, a^.tp^.cx, a^.tp^.cy);
-    calccorners (a^.tp);
     a^.tp^.scbid := -1;
     a^.tp^.ltostat := 0;
     a := a^.next;
@@ -642,6 +648,7 @@ begin
     readln (f, s);             //Boolean
     scb [i].zhelezno := (StrToInt (s) mod 2 = 1);
     scb [i].isforward := ((StrToInt (s) div 2) mod 2 = 1);
+    scb [i].right := ((StrToInt (s) div 4) mod 2 = 1);
 
     for j := 0 to maxpok - 1 do //Table1
     begin
@@ -789,6 +796,18 @@ begin
       end;
       p := p^.next;
     end;
+  end;
+end;
+
+procedure Twtf.calcallcorners(start: PBwp);
+var mylocalp:PBwp;
+begin
+  mylocalp := start;
+  while mylocalp <> nil do
+  begin
+    if (mylocalp^.tp <> nil) then
+      calccorners (mylocalp^.tp);
+    mylocalp := mylocalp^.next;
   end;
 end;
 

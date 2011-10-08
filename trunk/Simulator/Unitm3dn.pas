@@ -30,6 +30,7 @@ const mu = 0.25;                  //трение об рельсы
       brakeconst = 100;
       bshamount = 17;
       dv = 0.00001; //Физически бесконечно малая скорость
+      statdelit = 10;
 
 type
   THz = record
@@ -183,7 +184,7 @@ begin
   kran := 1;
   revers := 0;
   nrevers := 0;
-  delit := 10;
+  delit := statdelit;
   itx := 0;
   climit := 80 / 3.6;
   waiting := 0;
@@ -352,7 +353,8 @@ begin
 
   if wtf.gntrscbid <> oldhz then           //Детект проезда светофора, чтоб его
   begin
-    climit := wtf.givelimbycond [wtf.scb [oldhz].condition];
+    if wtf.cabfactor * v > 0 then
+      climit := wtf.givelimbycond [wtf.scb [oldhz].condition];
     oldhz := wtf.gntrscbid;
   end;
 
@@ -896,7 +898,7 @@ end;
 function TMainForm.bwgc(p: PTp): real;
 begin
   if (p^.idstat <> 0) then
-    result := 1 / (1.5 + sqr (Min(wtf.givelto(p), p^.ltostat) / delit))
+    result := max (1 / (1.5 + sqr (wtf.givelto(p) / delit)), 1 / (1.5 + sqr (p^.ltostat / statdelit)))
   else
     result := 1 / (1.5 + sqr (wtf.givelto(p) / delit));
 end;

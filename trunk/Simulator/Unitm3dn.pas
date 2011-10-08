@@ -31,6 +31,8 @@ const mu = 0.25;                  //трение об рельсы
       bshamount = 17;
       dv = 0.00001; //Физически бесконечно малая скорость
       statdelit = 10;
+      menurunspeed = 0.1;
+      menuwid = 0.2;
 
 type
   THz = record
@@ -107,7 +109,7 @@ type
     rup, polzunok, revers, nrevers, oldhz, itx, maxpolz, maxpolz2:integer;
     isrp, ismenu, nadoload, bbstarted:boolean;
     Textureamount, nquads, npoin, glaz, localidstat:integer;
-    climit, v, prs, k, waiting, kran, rwaiting, polzunwait, delit, timeofplaying:real;
+    climit, v, prs, k, waiting, kran, rwaiting, polzunwait, delit, timeofplaying, timeofmenu:real;
     wtf:TWtf;
     ueue:TShipLoader;
     blackbox:TBlackbox;
@@ -180,6 +182,7 @@ begin
   rwaiting := 0;
   polzunwait := 0;
   timeofplaying := 0;
+  timeofmenu := 0;
   prs := pmax;
   kran := 1;
   revers := 0;
@@ -191,7 +194,7 @@ begin
   isrp := false;
   ismenu := True;
   bbstarted := False;
-  Vp.Height := MainForm.Height;
+//  Vp.Height := MainForm.Height;
 
   // Задание газовых характеристик
   hz [0].kbeta := 0.28;
@@ -586,10 +589,11 @@ procedure TMainForm.TiPaintTimer(Sender: TObject);
 begin
   if ismenu then
   begin
+    timeofmenu := timeofmenu + menurunspeed * TiPaint.interval / 1000;
     DrawMenu;
-    if Vp.Height > 150 then
+{    if Vp.Height > 150 then
       Vp.Height := round (Vp.Height - (Vp.Height - 150) / 10);
-    DrawMenu;
+    DrawMenu;  }
   end
   else
     DrawGame;
@@ -1340,13 +1344,13 @@ begin
   glClear (GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   zafigachtexturu(21);
   glBegin(GL_QUADS);
-    glTexCoord2f (0, 0);
+    glTexCoord2f (timeofmenu, 0);
     glVertex3f(-0.8, -0.2, -0.15);
-    glTexCoord2f (0, 1);
+    glTexCoord2f (timeofmenu, 1);
     glVertex3f(-0.8, 0.2, -0.15);
-    glTexCoord2f (1, 1);
+    glTexCoord2f (timeofmenu + menuwid, 1);
     glVertex3f(0.8, 0.2, -0.15);
-    glTexCoord2f (1, 0);
+    glTexCoord2f (timeofmenu + menuwid, 0);
     glVertex3f(0.8, -0.2, -0.15);
   glEnd;
   SwapBuffers (DC);
@@ -1469,6 +1473,8 @@ begin
   wtf.constructscb (bwfirst);
   mmoLoadProg.Lines.Add('Зажжение светофоров');
   wtf.initialSCB;
+  mmoLoadProg.Lines.Add('Рассчёт углов');
+  wtf.calcallcorners (bwfirst);
   mmoLoadProg.Lines.Add('Загрузка станций');
   wtf.constructstat;
   mmoLoadProg.Lines.Add('Рассчёт станций');

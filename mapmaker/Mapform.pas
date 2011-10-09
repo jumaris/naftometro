@@ -65,6 +65,7 @@ type
     lbl9: TLabel;
     lbl10: TLabel;
     lbl11: TLabel;
+    btn7: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btn1Click(Sender: TObject);
     procedure btn2Click(Sender: TObject);
@@ -82,6 +83,7 @@ type
       Y: Integer);
     procedure pbMMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure btn7Click(Sender: TObject);
   private
 
   public
@@ -802,6 +804,11 @@ procedure TForm1.pbMMouseUp(Sender: TObject; Button: TMouseButton;
 begin
   isdown := False;
   pbM.Repaint;
+end;
+
+procedure TForm1.btn7Click(Sender: TObject);
+begin
+  ShowMessage('Ваш скромный создатель' + #13 + '      Руслан Котунов' + #13 + #13 + '               _____' + #13 + '             /      /' + #13 + '           /_    /_'  + #13 + '              /   /' + #13 + '             /  /' + #13 + '            / /' + #13 + '           //' + #13 + '          /');
 end;
 
 end.

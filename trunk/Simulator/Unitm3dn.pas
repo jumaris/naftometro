@@ -591,9 +591,6 @@ begin
   begin
     timeofmenu := timeofmenu + menurunspeed * TiPaint.interval / 1000;
     DrawMenu;
-{    if Vp.Height > 150 then
-      Vp.Height := round (Vp.Height - (Vp.Height - 150) / 10);
-    DrawMenu;  }
   end
   else
     DrawGame;
@@ -655,6 +652,11 @@ begin
     begin
       LabelPause.Visible := TiPhys.Enabled;
       TiPhys.Enabled := not TiPhys.Enabled;
+    end;
+    Key_Space: if climit <= 0 then
+    begin
+      climit := 20 / 3.6;
+      showmessage ('Больше не проезжай запрезщающих светофоров!');
     end;
     27:
     begin
@@ -987,7 +989,13 @@ end;
 procedure TMainForm.LoadCab;
 var i:integer;
 begin
-  ueue := TShipLoader.lego ('cab.txt');
+  if fileexists ('cab.txt') then
+    ueue := TShipLoader.lego ('cab.txt')
+  else
+  begin
+    wtf.die('Кто украл кабину!?');
+    close;
+  end;
   npoin := ueue.giveinteger;
   for i := 0 to npoin - 1 do
   begin
@@ -1112,6 +1120,13 @@ begin
         begin
           hrue := p^.together^.next1;
           togdadep := dep;
+        end;
+        if p^.together^.previous1^.together = p^.together^.previous1 then
+        begin
+          new (pp^.next);
+          pp := pp^.next;
+          pp^.next := nil;
+          pp^.tp := p^.together^.previous1;
         end;
       end;
       p := p^.next1;
@@ -1459,16 +1474,21 @@ begin
   mmoLoadProg.Lines.Clear;
   mmoLoadProg.Height := Vp.ClientHeight - 2 * mmoLoadProg.Top;
   mmoLoadProg.Width := Vp.ClientWidth - 2 * mmoLoadProg.Left;
-  mmoLoadProg.Lines.Add('Загрузка кабины');
-  LoadCab;
   mmoLoadProg.Lines.Add('Создание вспомогательного класса');
   wtf := TWTf.sozdat;
+  mmoLoadProg.Lines.Add('Загрузка кабины');
+  LoadCab;
   mmoLoadProg.Lines.Add('Запуск чёрного ящика');
   blackbox := TBlackbox.lego;
   bbstarted := true;
   mmoLoadProg.Lines.Add('Обработка параметров игры');
   wtf.wwp;
   bwfirst := wtf.constructmap (mmoLoadProg);
+  if bwfirst = nil then
+  begin
+    wtf.die('Не построилась карта. Там вообще файл с ней есть?');
+    close;
+  end;
   mmoLoadProg.Lines.Add('Построение светофоров');
   wtf.constructscb (bwfirst);
   mmoLoadProg.Lines.Add('Зажжение светофоров');

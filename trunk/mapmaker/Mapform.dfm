@@ -244,5 +244,14 @@ object Form1: TForm1
       TabOrder = 14
       OnClick = rb2Click
     end
+    object btn7: TButton
+      Left = 64
+      Top = 648
+      Width = 115
+      Height = 25
+      Caption = #1054#1073' '#1072#1074#1090#1086#1088#1072#1093
+      TabOrder = 15
+      OnClick = btn7Click
+    end
   end
 end

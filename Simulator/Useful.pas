@@ -371,6 +371,11 @@ begin
   i := 1;
   mmo.Lines.Add('Загрузка карты');
 
+  if not fileexists ('map/' + mapfile) then
+  begin
+    result := nil;
+    exit;
+  end;
   assign (f, 'map/' + mapfile);
   reset (f);
   s := '';
@@ -624,6 +629,11 @@ var i, j:integer;
     s:string;
 begin
   i := 0;
+  if not fileexists ('scb/' + scbfile) then
+  begin
+    die ('Светофорные указания не найдены!');
+    Halt;
+  end;
   assign (f, 'scb/' + scbfile);
   reset (f);
   s := '';
@@ -679,6 +689,11 @@ var i, j:integer;
     s:string;
 begin
   i := 1;
+  if not fileexists ('stations/' + stfile) then
+  begin
+    die ('Не пойму, откуда брать станции, насялника!');
+    Halt;
+  end;
   assign (f, 'stations/' + stfile);
   reset (f);
   s := '';
@@ -697,6 +712,11 @@ begin
     Readln (f, statinstruct [i].z);
     Readln (f, statinstruct [i].alpha);
 
+    if not fileexists ('stations/models/' + s + '.txt') then
+    begin
+      die ('Не существует требуемой модели станции: ' + s + '.txt');
+      Halt;
+    end;
     uuueee := TSHipLoader.lego ('stations/models/' + s + '.txt');
     nstatpoin [statinstruct [i].id] := uuueee.giveinteger;
     for j := 0 to nstatpoin [statinstruct [i].id] - 1 do

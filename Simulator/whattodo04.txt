@@ -1,0 +1,11 @@
+To version 0.4
+* Code structure - First of all!!!
+  * Ура, хоть как-то работает!
+  * Разоюраться с кнопками.
+  * Вносим свои предложения по структурированию сюда.
+  * То, что недавно менялось в версии 0.3 потихоньку переносим сюда.
+* Animated cabine
+* Save/load of game
+* Good sounds
+* Game options (in menu)
+* etc

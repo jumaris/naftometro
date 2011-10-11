@@ -13,7 +13,7 @@ const maxnwag = 100;
       shpalw = 2.2;
       msl = 0; //minscblight
       maxstatn = 100;
-      mll = 200; //Max light length
+
 type
   T3dc = record   //3d coords
     x:real;
@@ -36,7 +36,6 @@ type
     isright:boolean;
     id:integer;
     idstat:integer;
-    ltostat:integer;
     corners:array [0 .. numboc - 1] of T3dc;
     table:array [0 .. 3] of T3dc;
     shpala:array [0 .. 7] of T3dc;
@@ -106,8 +105,6 @@ type
   procedure wwp; //workwithparams
   procedure constructstat;
   procedure realizestat;
-  procedure calclight (start:PBwp);
-  procedure calcallcorners (start:PBwp);
   private
   public
     isleft:boolean;
@@ -116,8 +113,8 @@ type
     givelimbycond:array [0 .. maxpok - 1] of real;
     Ptrain:array [0 .. maxnwag] of PTp;
     tr, camdopkurs, camdopalpha:real;
-    cabfactor, nscb, nwag, wlength, maxdep:integer;
-    pheight, pwidth, acc, valphacam, u:real;
+    cabfactor, nscb, nwag, wlength:integer;
+    pheight, pwidth:real;
     nstat:integer;
     uuueee:TShipLoader;
     scb:array [0 .. maxscb - 1] of TScb;
@@ -200,7 +197,7 @@ end;
 
 procedure Twtf.calccorners(var p: PTp);
 var zkurs, dkurs, rad:real;
-    i, lrscbf:integer;   //left-right scb factor
+    i:integer;
 //zero kurs, deltakurs, radius
 begin
   zkurs := -1 * arctan (pheight / pwidth);
@@ -215,23 +212,17 @@ begin
 { 01
   32
 }
-
-  if (p^.scbid >= 0) and scb [p^.scbid].right then
-    lrscbf := -1
-  else
-    lrscbf := 1;
-
-  p.table [0].x := p.cx - sin (p.kurs) * pwidth / 2 * lrscbf;
-  p.table [0].y := p.cy + cos (p.kurs) * pwidth / 2 * lrscbf;
+  p.table [0].x := p.cx - sin (p.kurs) * pwidth / 2;
+  p.table [0].y := p.cy + cos (p.kurs) * pwidth / 2;
   p.table [0].z := p.cz + theight / 2;
-  p.table [3].x := p.cx - sin (p.kurs) * pwidth / 2 * lrscbf;
-  p.table [3].y := p.cy + cos (p.kurs) * pwidth / 2 * lrscbf;
+  p.table [3].x := p.cx - sin (p.kurs) * pwidth / 2;
+  p.table [3].y := p.cy + cos (p.kurs) * pwidth / 2;
   p.table [3].z := p.cz - theight / 2;
-  p.table [1].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
-  p.table [1].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
+  p.table [1].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth);
+  p.table [1].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth);
   p.table [1].z := p.cz + theight / 2;
-  p.table [2].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
-  p.table [2].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth) * lrscbf;
+  p.table [2].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth);
+  p.table [2].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth);
   p.table [2].z := p.cz - theight / 2;
 
   //Ох, шпала...
@@ -371,11 +362,6 @@ begin
   i := 1;
   mmo.Lines.Add('Загрузка карты');
 
-  if not fileexists ('map/' + mapfile) then
-  begin
-    result := nil;
-    exit;
-  end;
   assign (f, 'map/' + mapfile);
   reset (f);
   s := '';
@@ -483,7 +469,7 @@ begin
   end;
   close (f);
 
-  mmo.Lines.Add('Рассчёт карты');
+  mmo.Lines.Add('Расчёт карты');
   //Теперь после того, как считали всю жизненно важную информацию, начинаем подсчёт параметров карты
   a := first;
   while a^.next <> nil do
@@ -492,8 +478,8 @@ begin
       a^.tp^.kurs := giveangle (a^.tp^.cx, a^.tp^.cy, a^.tp^.next1^.cx, a^.tp^.next1^.cy)
     else
       a^.tp^.kurs := giveangle (a^.tp^.previous1^.cx, a^.tp^.previous1^.cy, a^.tp^.cx, a^.tp^.cy);
+    calccorners (a^.tp);
     a^.tp^.scbid := -1;
-    a^.tp^.ltostat := 0;
     a := a^.next;
   end;
 
@@ -544,14 +530,6 @@ begin
     pheight := StrToFloat (c);
   if (b = 'pwidth') then
     pwidth := StrToFloat (c);
-  if (b = 'timeacceleration') or (b = 'time_acceleration') then
-    acc := StrToFloat (c);
-  if (b = 'valphacam') then
-    valphacam := StrToFloat (c);
-  if (b = 'drawdepth') or (b = 'draw_depth') then
-    maxdep := StrToInt (c);
-  if (b = 'u') or (b = 'voltage') then
-    u := StrToFloat (c);
   if (b = 'scb') then
     scbfile := c;
   if (b = 'map') then
@@ -587,11 +565,7 @@ begin
   wlength := 19;
   pheight := 4.4;
   pwidth := 4.16;
-  acc := 1.5;
-  valphacam := 100;
-  maxdep := 100;
-  u := 825;
-  mapfile := 'output.naftomap';
+  mapfile := 'input.naftomap';
 
   reset (f);
   while (not eof (f)) do
@@ -629,11 +603,6 @@ var i, j:integer;
     s:string;
 begin
   i := 0;
-  if not fileexists ('scb/' + scbfile) then
-  begin
-    die ('Светофорные указания не найдены!');
-    Halt;
-  end;
   assign (f, 'scb/' + scbfile);
   reset (f);
   s := '';
@@ -658,7 +627,6 @@ begin
     readln (f, s);             //Boolean
     scb [i].zhelezno := (StrToInt (s) mod 2 = 1);
     scb [i].isforward := ((StrToInt (s) div 2) mod 2 = 1);
-    scb [i].right := ((StrToInt (s) div 4) mod 2 = 1);
 
     for j := 0 to maxpok - 1 do //Table1
     begin
@@ -689,11 +657,6 @@ var i, j:integer;
     s:string;
 begin
   i := 1;
-  if not fileexists ('stations/' + stfile) then
-  begin
-    die ('Не пойму, откуда брать станции, насялника!');
-    Halt;
-  end;
   assign (f, 'stations/' + stfile);
   reset (f);
   s := '';
@@ -712,12 +675,7 @@ begin
     Readln (f, statinstruct [i].z);
     Readln (f, statinstruct [i].alpha);
 
-    if not fileexists ('stations/models/' + s + '.txt') then
-    begin
-      die ('Не существует требуемой модели станции: ' + s + '.txt');
-      Halt;
-    end;
-    uuueee := TSHipLoader.lego ('stations/models/' + s + '.txt');
+    uuueee := TSHipLoader.create ('stations/models/' + s + '.txt');
     nstatpoin [statinstruct [i].id] := uuueee.giveinteger;
     for j := 0 to nstatpoin [statinstruct [i].id] - 1 do
     begin
@@ -748,7 +706,7 @@ begin
       statqua [statinstruct [i].id, j].d.z := uuueee.giveinteger;
     end;
 
-    uuueee.Lesha;
+    uuueee.destroy;
     inc (i);
   end;
   close (f);
@@ -772,63 +730,6 @@ begin
       statrealpoin [i, j].y := statinstruct[k].y+tempx*sin(statinstruct[k].alpha)+tempy*cos(statinstruct[k].alpha);
       statrealpoin [i, j].z := statrealpoin [i, j].z + statinstruct [k].z;
     end;
-end;
-
-procedure Twtf.calclight(start: PBwp);
-var i, tmpl, tmpidstat:Integer;
-    p:PBwp;
-begin
-  for i := 0 to mll - 1 do
-  begin
-    p := start;
-    while p <> nil do
-    begin
-      if (p^.tp <> nil) and (p^.tp^.idstat = 0) then
-      begin
-        tmpl := mll;
-        tmpidstat := 0;
-        if (p^.tp^.next1 <> nil) and (p^.tp^.next1^.idstat <> 0) then
-        begin
-          tmpl := min (tmpl, p^.tp^.next1^.ltostat + 1);
-          tmpidstat := p^.tp^.next1^.idstat;
-        end;
-        if (p^.tp^.next2 <> nil) and (p^.tp^.next2^.idstat <> 0) then
-        begin
-          tmpl := min (tmpl, p^.tp^.next2^.ltostat + 1);
-          tmpidstat := p^.tp^.next2^.idstat;
-        end;
-        if (p^.tp^.previous1 <> nil) and (p^.tp^.previous1^.idstat <> 0) then
-        begin
-          tmpl := min (tmpl, p^.tp^.previous1^.ltostat + 1);
-          tmpidstat := p^.tp^.previous1^.idstat;
-        end;
-        if (p^.tp^.previous2 <> nil) and (p^.tp^.previous2^.idstat <> 0) then
-        begin
-          tmpl := min (tmpl, p^.tp^.previous2^.ltostat + 1);
-          tmpidstat := p^.tp^.previous2^.idstat;
-        end;
-
-        if tmpl < mll then
-        begin
-          p^.tp^.ltostat := tmpl;
-          p^.tp^.idstat := tmpidstat;
-        end;
-      end;
-      p := p^.next;
-    end;
-  end;
-end;
-
-procedure Twtf.calcallcorners(start: PBwp);
-var mylocalp:PBwp;
-begin
-  mylocalp := start;
-  while mylocalp <> nil do
-  begin
-    if (mylocalp^.tp <> nil) then
-      calccorners (mylocalp^.tp);
-    mylocalp := mylocalp^.next;
-  end;
 end;
 
 end.

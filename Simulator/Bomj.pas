@@ -3,19 +3,19 @@ unit Bomj;
 interface
 
 type TShipLoader = class
-       constructor lego (s:string);
-       destructor Lesha;
+       constructor create (s:string);
+       destructor destroy;
        function givereal:Real;
        function giveinteger:Integer;
      private
        f:Text;
      end;
      TBlackbox = class
-       constructor lego;
-       destructor Lesha;
-       procedure sri (s:string);
+       constructor create;
+       destructor destroy;
+       procedure writestring (s:string);
      private
-       f:Text;  
+       f:Text;
      end;
 
 implementation
@@ -36,31 +36,31 @@ begin
   Result := a;
 end;
 
-constructor TShipLoader.lego (s:string);
+constructor TShipLoader.create (s:string);
 begin
   Assign (f, s);
   Reset (f);
 end;
 
-destructor TShipLoader.Lesha;
+destructor TShipLoader.destroy;
 begin
   Close (f);
 end;
 
 { TBlackbox }
 
-constructor TBlackbox.lego;
+constructor TBlackbox.create;
 begin
   Assign (f, 'Drivelog.txt');
   Rewrite (f);
 end;
 
-destructor TBlackbox.Lesha;
+destructor TBlackbox.destroy;
 begin
   close (f);
 end;
 
-procedure TBlackbox.sri(s: string);
+procedure TBlackbox.writestring(s: string);
 begin
   Writeln (f, s);
 end;

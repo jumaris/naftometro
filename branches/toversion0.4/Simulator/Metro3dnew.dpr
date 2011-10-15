@@ -7,7 +7,8 @@ uses
   Unitm3dn in 'Unitm3dn.pas' {MainForm},
   Useful in 'Useful.pas',
   Bomj in 'Bomj.pas',
-  Gamer in 'Gamer.pas';
+  Gamer in 'Gamer.pas',
+  Painter in 'Painter.pas';
 
 {$R *.res}
 

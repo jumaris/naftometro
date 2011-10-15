@@ -78,7 +78,7 @@ object MainForm: TMainForm
     Left = 630
     Top = 185
     Width = 244
-    Height = 377
+    Height = 369
     Align = alRight
     TabOrder = 1
     Visible = False
@@ -331,7 +331,7 @@ object MainForm: TMainForm
     Left = 0
     Top = 185
     Width = 630
-    Height = 377
+    Height = 369
     Align = alClient
     TabOrder = 2
     object btnStart: TBitBtn

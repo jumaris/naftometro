@@ -6,8 +6,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, Qt, Math, ComCtrls, useful, dglOpenGL, OpenGL,
-  MPlayer, Bomj, Buttons, Bass, StdCtrls, Gamer;
+  Dialogs, ExtCtrls, Math, ComCtrls, useful, dglOpenGL, OpenGL,
+  MPlayer, Bomj, Buttons, Bass, StdCtrls, Gamer, Painter;
 
 
 {

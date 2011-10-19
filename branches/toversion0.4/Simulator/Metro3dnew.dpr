@@ -8,7 +8,9 @@ uses
   Useful in 'Useful.pas',
   Bomj in 'Bomj.pas',
   Gamer in 'Gamer.pas',
-  Painter in 'Painter.pas';
+  Painter in 'Painter.pas',
+  Physer in 'Physer.pas',
+  ObjectContainer in 'ObjectContainer.pas';
 
 {$R *.res}
 

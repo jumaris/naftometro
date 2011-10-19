@@ -46,7 +46,7 @@ object MainForm: TMainForm
     Left = 0
     Top = 0
     Width = 874
-    Height = 185
+    Height = 150
     Align = alTop
     TabOrder = 0
     object MPODZ: TMediaPlayer
@@ -76,9 +76,9 @@ object MainForm: TMainForm
   end
   object Bp: TPanel
     Left = 630
-    Top = 185
+    Top = 150
     Width = 244
-    Height = 369
+    Height = 412
     Align = alRight
     TabOrder = 1
     Visible = False
@@ -329,9 +329,9 @@ object MainForm: TMainForm
   end
   object Mp: TPanel
     Left = 0
-    Top = 185
+    Top = 150
     Width = 630
-    Height = 369
+    Height = 412
     Align = alClient
     TabOrder = 2
     object btnStart: TBitBtn

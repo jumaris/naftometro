@@ -3,12 +3,12 @@ unit Painter;
 interface
 
 uses
-  SysUtils, math, windows, Graphics,
+  SysUtils, math, windows, Graphics, Classes,
   dglOpenGL, OpenGL,
-  useful;
+  useful, ObjectContainer;
 
-procedure init();
-procedure PaintGame(Width, Height: integer; DC:HDC; wtf:TWtf);
+  procedure PaintGame(Width, Height: integer; DC:HDC; const wtf:TWtf; const train: THardTrain);
+  procedure init();
 
 implementation
 
@@ -28,6 +28,9 @@ const         // цвет тюбинга
 const
   maxdep = 100;     // длина отрисовки
 
+var
+  realpoin: array [0..10000] of TRe3dc;
+
 procedure zafigachtexturu(i: integer);
 var DataA:array of Byte;
     j:integer;
@@ -40,12 +43,12 @@ begin
     Finalize (DataA);
 end;
 
-function bwgc(p: PTp; wtf: Twtf): real;
+function bwgc(p: PTp; const wtf: Twtf): real;
 begin
   result := 1 / (1.5 + sqr (wtf.givelto(p) / delit));
 end;
 
-procedure PaintSCB(wtf: Twtf);
+procedure PaintSCB(const wtf: Twtf);
 var i:integer;
     p2:PTp;
 begin
@@ -67,7 +70,7 @@ begin
   end;
 end;
 
-procedure PaintTubing(p: Ptp; var localidstat: integer; var wtf: TWtf);
+procedure PaintTubing(p: Ptp; var localidstat: integer; const wtf: TWtf);
 var i:integer;
     p2:PTp;
     c:Real;
@@ -112,7 +115,7 @@ begin
     end;
 end;
 
-procedure PaintStation(localidstat:integer; var wtf:Twtf);
+procedure PaintStation(localidstat:integer; const wtf:Twtf);
 var i:Integer;
 begin
   glColor3f(1, 1, 1);
@@ -132,7 +135,7 @@ begin
   end;
 end;
 
-procedure PaintFloor(p: Ptp; var wtf: TWtf);
+procedure PaintFloor(p: Ptp; const wtf: TWtf);
 var p2, p3:PTp;
     c:Real;
     i:Integer;
@@ -236,7 +239,7 @@ begin
   end;
 end;
 
-procedure PaintRails(p: Ptp; var wtf: TWtf);
+procedure PaintRails(p: Ptp; const wtf: TWtf);
 var p2:PTp;
     c:Real;
 begin
@@ -257,7 +260,7 @@ begin
   glEnd;
 end;
 
-procedure RecConstQue(p:PTp; dep:integer; var wtf:Twtf; var queuestart:PBwp);
+procedure RecConstQue(p:PTp; dep:integer; const wtf:Twtf; var queuestart:PBwp);
 var pp:PBWp;
     hrue:PTp;
     togdadep:integer;
@@ -377,7 +380,7 @@ begin
   end;
 end;
 
-procedure PaintScene(wtf:TWtf);
+procedure PaintScene(const wtf:TWtf);
 var
   bwa:PBWp;
   queuestart: PBWp;
@@ -439,39 +442,45 @@ begin
   end;}
 end;
 
-procedure CalcRealPoints(var wtf:TWtf);
+procedure MovePoint(var a: TRe3dc; kurs, len: real);
+begin
+  a.x := a.x + len * cos (kurs/180*pi);
+  a.y := a.y + len * sin (kurs/180*pi);
+end;
+
+procedure CalcRealPoints(const wtf:TWtf; npoin:Integer; const poin:array of TRe3dc);
 var i:integer;
     x, y, kurs, z:Real;
 begin
   if wtf.cabfactor=1 then
   begin
-    x := wtf.givebx(wtf.ptrain [0]);
-    y := wtf.giveby(wtf.ptrain [0]);
-    z := wtf.givebz(wtf.ptrain [0]);
+    x := wtf.givebx(wtf.ptrain[0]);
+    y := wtf.giveby(wtf.ptrain[0]);
+    z := wtf.givebz(wtf.ptrain[0]);
   end
   else
   begin
-    x := wtf.givebx(wtf.ptrain [wtf.nwag]);
-    y := wtf.giveby(wtf.ptrain [wtf.nwag]);
-    z := wtf.givebz(wtf.ptrain [wtf.nwag]);
+    x := wtf.givebx(wtf.ptrain[wtf.nwag]);
+    y := wtf.giveby(wtf.ptrain[wtf.nwag]);
+    z := wtf.givebz(wtf.ptrain[wtf.nwag]);
   end;
   kurs := wtf.givecamkurs - wtf.camdopkurs;
 
   //кабина
-  {for i := 0 to npoin - 1 do   //??????? ????? ? ???? ?? ?????? ??????
+  for i := 0 to npoin - 1 do   //??????? ????? ? ???? ?? ?????? ??????
   begin
-    realpoin [i].x := x;
-    realpoin [i].y := y;
+    realpoin[i].x := x;
+    realpoin[i].y := y;
 
-    MovePoint(realpoin [i], kurs, Poin [i].x);
-    MovePoint(realpoin [i], kurs + 90, Poin [i].y);
-    realpoin [i].z := poin [i].z + z;
-  end;  }
+    MovePoint(realpoin[i], kurs, Poin[i].x);
+    MovePoint(realpoin[i], kurs + 90, Poin[i].y);
+    realpoin[i].z := poin[i].z + z;
+  end;
 end;
 
-procedure PaintGame(Width, Height: integer; DC:HDC; wtf:TWtf);
+procedure PaintGame(Width, Height: integer; DC:HDC; const wtf:TWtf; const train: THardTrain);
 begin
-  calcRealPoints(wtf);
+  calcRealPoints(wtf, train.npoin, train.poin);
   glViewPort (0, 0, Width, Height);
   glClear (GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glPushMatrix;
@@ -482,14 +491,10 @@ begin
 
   glRotatef (90, -1, 0, 0);
   glRotatef (90, 0, 0, 1);
-  //glTranslatef(-realpoin[glaz].x, -realpoin[glaz].y, -realpoin[glaz].z);
-
-  //Writeln(wtf.ptrain[0].next1.next1.cx);
+  glTranslatef(-realpoin[train.glaz].x, -realpoin[train.glaz].y, -realpoin[train.glaz].z);
 
   PaintSCB(wtf);
   PaintScene(wtf);
-
-  //PaintTubing(wtf.ptrain[0]);
 
   PaintCab;
 
@@ -531,18 +536,18 @@ begin
     try
       GetDIBits (MemDC, Bitmap.Handle, 0, biHeight, Data, BMInfo, DIB_RGB_COLORS);
       for I := 0 to ImageSize - 1 do begin
-        Temp := Data [i*3];
-        Data [i * 3] := Data [i*3 + 2];
-        Data [i * 3 + 2] := Temp;
+        Temp := Data[i*3];
+        Data[i * 3] := Data[i*3 + 2];
+        Data[i * 3 + 2] := Temp;
       end;
       for I := 0 to ImageSize - 1 do begin
-        mytextures [i * 4, bmap] := Data [i*3];
-        mytextures [i * 4 + 1, bmap] := Data [i*3 + 1];
-        mytextures [i * 4 + 2, bmap] := Data [i*3 + 2];
-        if (Data [i*3] = 254) then
-          mytextures [i * 4 + 3, bmap] := 0
+        mytextures[i * 4, bmap] := Data[i*3];
+        mytextures[i * 4 + 1, bmap] := Data[i*3 + 1];
+        mytextures[i * 4 + 2, bmap] := Data[i*3 + 2];
+        if (Data[i*3] = 254) then
+          mytextures[i * 4 + 3, bmap] := 0
         else
-          mytextures [i * 4 + 3, bmap] := 255;
+          mytextures[i * 4 + 3, bmap] := 255;
       end;
     finally
       Finalize (Data);
@@ -550,9 +555,9 @@ begin
       Bitmap.Free;
     end;
   end;
-  texturesizes [bmap].x := bitWid;
-  texturesizes [bmap].y := bitHei;
-  texturesizes [bmap].z := ImageSize * 4;
+  texturesizes[bmap].x := bitWid;
+  texturesizes[bmap].y := bitHei;
+  texturesizes[bmap].z := ImageSize * 4;
 end;
 
 procedure init();

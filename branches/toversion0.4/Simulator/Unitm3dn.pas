@@ -7,7 +7,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, Math, ComCtrls, useful, dglOpenGL, OpenGL,
-  MPlayer, Bomj, Buttons, Bass, StdCtrls, Gamer, Painter;
+  MPlayer, Bomj, Buttons, Bass, StdCtrls,  Gamer, Painter;
 
 
 {
@@ -117,11 +117,10 @@ implementation
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
-var i:integer;
 begin
   Left:=Screen.Width-Width;  Left:=Left div 2;
   Top:=Screen.Height-Height; Top:=Top div 2;
-  Vp.Height := Height;
+  //Vp.Height := Height;
   ismenu := True;
   bbstarted := False;
   nadoload:=true;
@@ -144,299 +143,6 @@ begin
   Gamer.start();
 end;
 
-{procedure TMainForm.mkphys;
-var zhvost, zgolova, F, f2:real;
-    i:integer;
-begin
-  timeofplaying := timeofplaying + k;
-
-  Vl.Caption := 'Скорость:' + IntToStr (round (abs (v) * 3.6)) + ' км/ч';
-  CL.Caption := 'Проехано:' + IntToStr (itx) + ' м';
-  LT.Caption := 'Время игры:' + wtf.TimeToStr(timeofplaying);
-  Pl.Caption := 'Давление:' + FloatToStr (round (prs * 100) / 100) + ' атм.';
-  LK.Caption := 'Пневмо:' + IntToStr (round (kran * 100)) + '%';
-  LimL.Caption := 'Ограничение:' + IntToStr (round (climit * 3.6)) + ' км/ч';
-  if wtf.gntrscbid >= 0 then
-    LFlim.Caption := 'Будущ огранич:' + IntToStr (round (wtf.givelimbycond [wtf.scb [wtf.gntrscbid].condition] * 3.6)) + ' км/ч'
-  else
-    LFlim.Caption := 'Далее нет светофоров';
-  LabelI.Caption := 'Ток через все дв.:' + IntToStr (round (givei2 (polzunok, v))) + ' А';
-  label2.Caption := 'Номер схемы:' + IntToStr (polzunok);
-
-  if polzunok > 0 then
-  begin
-    label3.Caption := 'Сопротивление:' + FloatToStr (round (hz [polzunok - 1].r * 100) / 100);
-    if hz [polzunok - 1].ispp then
-      label4.Caption := 'Поле:' + IntToStr (round (hz [polzunok - 1].kbeta * 400)) + '% п/п'
-    else
-      label4.Caption := 'Поле:' + IntToStr (round (hz [polzunok - 1].kbeta * 100)) + '%';
-  end;
-  if polzunok < 0 then
-  begin
-    label3.Caption := 'Сопротивление:' + FloatToStr (round (brakehz [-polzunok - 1].r * 100) / 100);
-    label4.Caption := 'Поле:' + IntToStr (round (brakehz [-polzunok - 1].kbeta * 100)) + '%';
-  end;
-  if polzunok = 0 then
-  begin
-    label3.Caption := 'Собери';
-    label4.Caption := 'схему';
-  end;
-
-  if revers = 0 then
-    revl.Caption := 'нейтраль.';
-  if revers * wtf.cabfactor = 1 then
-    revl.Caption := 'вперёд.';
-  if revers * wtf.cabfactor = -1 then
-    revl.Caption := 'назад.';
-  revl.Caption := 'Реверс:' + revl.Caption;
-  if rwaiting >= 0 then
-    revl.Caption := revl.Caption + ' пркл';
-
-  if rup = 0 then
-    Rl.Caption := '0';
-  if rup = 1 then
-    Rl.Caption := 'Ход 1';
-  if rup = 2 then
-    Rl.Caption := 'Ход 2';
-  if rup = 3 then
-    Rl.Caption := 'Ход 3';
-  if rup = -1 then
-    Rl.Caption := 'Тормоз 1';
-  if rup = -2 then
-    Rl.Caption := 'Тормоз 1А';
-  if rup = -3 then
-    Rl.Caption := 'Тормоз 2';
-
-  if wtf.gntrscbid <> oldhz then           //Детект проезда светофора, чтоб его
-  begin
-    climit := wtf.givelimbycond [wtf.scb [oldhz].condition];
-    oldhz := wtf.gntrscbid;
-  end;
-
-  if v * revers < -10*dv then             //АОС
-  begin
-    kran := 1;
-    blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Сработка АОС');
-    AOS.Visible := true;
-  end
-  else
-    AOS.Visible := false;
-
-  if givei (polzunok, v) > IMAX then      //РП
-  begin
-    isrp := true;
-    blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Сработка РП');
-    RP.Visible := true;
-  end;
-  if revers = 0 then
-  begin
-    if isrp then
-      blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Возврат РП');
-    isrp := false;
-    RP.Visible := false;
-  end;
-
-  if abs (v) > climit then                   //АЛС
-  begin
-    kran := 1;
-    blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Сработка АЛС-АРС');
-    ALS.Visible := true;
-    rup := 0;
-  end
-  else
-    ALS.Visible := false;
-
-  if kran <= 0.25 then
-    prs := prs - (0.25 - kran) * kv * prs;             //Спуск
-  if kran >= (0.45) then
-    prs := prs - (0.45 - kran) * kv * (pmax - prs);    //Накачка
-
-  if mykeys.ipr then                             //Вращение крана
-    kran := kran + kmv * k;
-  if mykeys.dpr then
-    kran := kran - kmv * k;
-  if kran > 1 then kran := 1;
-  if kran < 0 then kran := 0;
-
-
-// Передвижение поезда
-  wtf.tr := wtf.tr + v * k;
-  while wtf.tr > 1 do
-  begin
-    wtf.tr := wtf.tr - 1;
-    if wtf.isleft then
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.next1
-    else
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.next2;
-    inc (itx);
-
-    if (((wtf.Ptrain [0]^.next1 = nil) and wtf.isleft) or
-       ((wtf.Ptrain [0]^.next2 = nil) and not wtf.isleft)) then
-    begin
-      wtf.die('Выезд за пределы тоннеля');
-      close;
-    end;
-  end;
-  while wtf.tr < 0 do
-  begin
-    wtf.tr := wtf.tr + 1;
-    if wtf.isleft then
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.previous1
-    else
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.previous2;
-    dec (itx);
-
-    if (((wtf.Ptrain [wtf.nwag]^.previous1 = nil) and wtf.isleft) or
-       ((wtf.Ptrain [wtf.nwag]^.previous2 = nil) and not wtf.isleft)) then
-    begin
-      wtf.die('Выезд за пределы тоннеля');
-      close;
-    end;
-  end;
-
-// Математическая физика поезда
-
-  if waiting >= 0 then
-    waiting := waiting - k;
-  if polzunwait >= 0 then
-    polzunwait := polzunwait - k;
-
-  if (rup = 0) or (rup = 1) then                //Поведение ползунка в зависимости от РУП
-    polzunok := rup;
-  if (rup = 2) and (polzunok > maxpolz) then
-    polzunok := maxpolz;
-  if (((rup = 2) and (polzunok < maxpolz)) or ((rup = 3) and (polzunok < maxpolz2))) and (polzunwait < 0) then
-  begin
-    f2 := givef (polzunok, v);
-    if (f2 / mwag < amax) then
-    begin
-      polzunwait := 0.3;
-      inc (polzunok);
-    end;
-  end;
-
-  if (revers <> 0) and (rwaiting <= 0) then         //Передвижение ручки управления поездом
-  begin
-    if Mykeys.up then
-      if (rup < 3) and (waiting <= 0) then
-      begin
-        inc (rup);
-        blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Перевод РУП в ' + IntToStr(rup));
-        waiting := 0.2;
-      end;
-    if Mykeys.down then
-      if (rup > -3) and (waiting <= 0) then
-      begin
-        dec (rup);
-        blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Перевод РУП в ' + IntToStr(rup));
-        waiting := 0.2;
-        if rup = -1 then
-          polzunok := rup;
-        if ((rup = -2) and (polzunok > -bshamount)) then
-          dec (polzunok);
-      end;
-  end;
-
-  if ((rup = -3) and (polzunok > -bshamount) and (givebrakef(-polzunok, v) / mwag < amax1)) and (polzunwait < 0) then
-  begin
-    dec (polzunok);
-    polzunwait := 0.3;
-  end;
-
-  if (rup = -3) then
-    prs := max (prs, 0.5 - v/7);
-
-  if isrp then
-    polzunok := 0;
-
-  if rwaiting >= 0 then
-  begin
-    rwaiting := rwaiting - k;
-    if rwaiting < 0 then
-      revers := nrevers;
-  end;
-
-
-  if (rwaiting <= 0) and (rup = 0) then            //Передвижение реверса
-  begin
-    if ((Mykeys.fw and (wtf.cabfactor = 1)) or (Mykeys.bw and (wtf.cabfactor = -1))) and (revers < 1)  then
-    begin
-      inc (nrevers);
-      blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Перевод реверса в ' + IntToStr(nrevers));
-      rwaiting := 1;
-    end;
-    if ((Mykeys.fw and (wtf.cabfactor = -1)) or (Mykeys.bw and (wtf.cabfactor = 1))) and (revers > -1) then
-    begin
-      dec (nrevers);
-      blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Перевод реверса в ' + IntToStr(nrevers));
-      rwaiting := 1;
-    end;
-  end;
-
-  //Собственно, та самая физическа физика.
-  //Сила вперёд, без k
-  //Все вагоны одинаковы - рассчёт для среднестатистического вагона
-
-  F := -1 * v * betamu * mwag;  //Трение в осях
-
-  if polzunok > 0 then               //Разгон двигателем
-    F := F + givef (polzunok - 1, v) * revers;
-
-  if polzunok < 0 then               //Динамический тормоз
-    F := F - givebrakef (-polzunok - 1, v) * revers;
-
-  //Сила тяжести
-  F := f + g * mwag * (wtf.givebz (wtf.ptrain [wtf.nwag]) - wtf.givebz (wtf.ptrain [0])) / (wtf.nwag * wtf.wlength);
-
-  //Колёса не могут вращаться в обратную сторону - аксиома
-  //Действие пневмотормоза
-  if prs > pmin then
-  begin
-    if abs (v) > dv then
-      if v > 0 then
-        F := F - amax2 * mwag * (prs - pmin) / (pmax - pmin)
-      else
-        F := F + amax2 * mwag * (prs - pmin) / (pmax - pmin)
-    else
-      If F > 0 then
-        F := Max (0, F - amax2 * mwag * (prs - pmin) / (pmax - pmin))
-      else
-        F := Min (0, F + amax2 * mwag * (prs - pmin) / (pmax - pmin));
-  end;
-
-  //Сила не может быть больше, чем сила трения о рельсы
-  if F > mwag * g * mu then
-    F := mwag * g * mu;
-  if F < -mwag * g * mu then
-    F := -mwag * g * mu;
-
-  //После того, как мы учли все факторы, подействуем этой силой.
-
-  if (abs (v) > abs (F / mwag * k)) then   //v > a*dt - всё отлично, не налажаем
-    v := v + F / mwag * k
-  else
-    if v * F >= 0 then     //Сонаправлены
-      v := v + F / mwag * k
-    else                  //Противонаправлены
-      v := 0;
-
-  if Mykeys.mr then                                             //Поворот камеры
-    wtf.camdopkurs := wtf.camdopkurs - k * valphacam;
-  if Mykeys.ml then
-    wtf.camdopkurs := wtf.camdopkurs + k * valphacam;
-  if Mykeys.mu then
-    wtf.camdopalpha := wtf.camdopalpha + k * valphacam;
-  if Mykeys.md then
-    wtf.camdopalpha := wtf.camdopalpha - k * valphacam;
-
-  //Всякие звуки
-  Zvuchi;
-end;}
-
 procedure TMainForm.TiPaintTimer(Sender: TObject);
 begin
   if ismenu then
@@ -453,7 +159,7 @@ end;
 procedure TMainForm.TiPhysTimer(Sender: TObject);
 begin
   if not ismenu then
-    //Mkphys;
+    Gamer.Mkphys;
 end;
 
 {procedure TMainForm.FormKeyDown(Sender: TObject; var Key: Word;

@@ -5,13 +5,14 @@ unit Gamer;
 interface
 
 uses Bomj, useful, Graphics,
-  MPlayer, Buttons, Bass, StdCtrls, Windows, math, SysUtils, painter;
+  MPlayer, Buttons, Bass, StdCtrls, Windows, math, SysUtils, Painter, physer, ObjectContainer;
 
 procedure start();
 procedure loadcab();
 procedure LoadGame(var logMemo:Tmemo);
 procedure mkgoodscb;
 procedure SetChannels;
+procedure mkphys();
 procedure DrawGame(Width, Height: integer; DC:HDC);
 
 implementation
@@ -34,14 +35,14 @@ type
     down:boolean;
     ipr:boolean;
     dpr:boolean;
-    mr:boolean;  //   ->                                                       
+    mr:boolean;  //   ->
     ml:boolean;  //   <-
     mu:boolean;  //  /\
     md:boolean;  //  \/
   end;
 
 
-const mu = 0.25;                  //трение об рельсы
+const {mu = 0.25;                  //трение об рельсы
       betamu = 0.003 ;            //Трение в осях
       acc = 1.5;
       g = 9.8;                      //сила тяжести
@@ -59,21 +60,16 @@ const mu = 0.25;                  //трение об рельсы
       rmax = 5;
       r0 = 0.01;
       IMAX = 350;
-      brakeconst = 100;
+      brakeconst = 100;}
       bshamount = 17;
-      dv = 0.00001; //Физически бесконечно малая скорость
-      tiphysinterval = 20;
+      {
+      tiphysinterval = 20;}
 
 
 var
   queuestart:PBWp;
-  ueue:TShipLoader;
-  npoin:Integer;
-  poin:array [0 .. 10000] of TRe3dc;
   realpoin: array [0 .. 10000] of TRe3dc;
   glaz:Integer;
-  nquads:Integer;
-  qua:array [0 .. 10000] of TBwquads;
   wtf:TWtf;
   bwfirst:PBWp;
   blackbox:TBlackbox;
@@ -86,7 +82,7 @@ var
   rup, polzunok, revers, nrevers, itx, maxpolz, maxpolz2:integer;
     isrp, ismenu, nadoload, bbstarted:boolean;
     localidstat:integer;
-    climit, v, prs, k, waiting, kran, rwaiting, polzunwait, delit, timeofplaying:real;
+//    climit, v, prs, k, waiting, kran, rwaiting, polzunwait, delit, timeofplaying:real;
 
 
 var
@@ -94,100 +90,13 @@ var
   hz:array [0 .. 100] of THz;
   brakehz:array [0 .. bshamount - 1] of TBrakeHz;
 
+var
+  train:TSoftTrain;
+
 
 procedure Start();
 var i:Integer;
 begin
-  v := 0;
-  rup := 0;
-  polzunok := 0;
-  rwaiting := 0;
-  polzunwait := 0;
-  timeofplaying := 0;
-  prs := pmax;
-  kran := 1;
-  revers := 0;
-  nrevers := 0;
-  delit := 10;
-  itx := 0;
-  climit := 80 / 3.6;
-  k := TiPhysInterval / 1000 * acc;
-  waiting := 0;
-  isrp := false;
-
-
-  // Задание газовых характеристик
-  hz [0].kbeta := 0.28;
-  hz [0].r := rmax + r0;
-  hz [0].ispp := false;
-  hz [1].kbeta := 0.7;
-  hz [1].r := rmax + r0;
-  hz [1].ispp := false;
-  i := 2;
-  while hz [i - 1].r > r0 + 0.3 * sqrt (i) do
-  begin
-    hz [i].r := hz [i - 1].r - 0.3 * sqrt (i);
-    hz [i].kbeta := 1;
-    hz [i].ispp := false;
-    inc (i);
-  end;
-
-  maxpolz := i + 1;
-
-  hz [i].r := r0;
-  hz [i].kbeta := 1;
-  hz [i].ispp := false;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 0.7;
-  hz [i].ispp := false;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 0.5;
-  hz [i].ispp := false;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 0.37;
-  hz [i].ispp := false;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 1 / 4;
-  hz [i].ispp := true;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 0.7 / 4;
-  hz [i].ispp := true;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 0.5 / 4;
-  hz [i].ispp := true;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 0.37 / 4;
-  hz [i].ispp := true;
-  inc (i);
-  hz [i].r := r0;
-  hz [i].kbeta := 0.28 / 4;
-  hz [i].ispp := true;
-  maxpolz2 := i + 1;
-
-  //Задание тормозных характеристик
-  for i := 0 to bshamount - 1 do
-    brakehz [i].vmin := 3 - 2.5 * i / (bshamount - 1);
-  brakehz [0].R := 5;
-  brakehz [0].kbeta := 0.5;
-  brakehz [1].R := 5;
-  brakehz [1].kbeta := 0.7;
-  brakehz [2].R := 5;
-  brakehz [2].kbeta := 1;
-  for i := 3 to bshamount - 1 do
-  begin
-   brakehz [i].R := brakehz [i - 1].R  / (1.3);
-   brakehz [i].kbeta := 1;
-  end;
-
-  Painter.init();
-
   nadoload := True;
 {
 
@@ -198,6 +107,7 @@ end;
 procedure LoadGame(var logmemo:TMemo);
 var i:integer;
 begin
+  Painter.init();
   logmemo.Visible := True;
   logmemo.Lines.Clear;
   logmemo.Lines.Add('Загрузка кабины');
@@ -222,47 +132,17 @@ begin
   begin
     mkgoodscb;
   end;
+  physer.init(logMemo, wtf);
   oldhz := wtf.gnscbid(wtf.ptrain [0], wtf.isleft);
   logmemo.Lines.Add('Создание звуков');
   SetChannels;
-  Sleep(1000);
 end;
 
 procedure LoadCab;
-var i:integer;
+var ueue: TShipLoader;
 begin
   ueue := TShipLoader.create('cab.txt');
-  npoin := ueue.giveinteger;
-  for i := 0 to npoin - 1 do
-  begin
-    poin [i].x := ueue.givereal;
-    poin [i].y := ueue.givereal;
-    poin [i].z := ueue.givereal;
-    if ueue.giveinteger = 1 then
-      glaz := i;
-  end;
-
-  nquads := ueue.giveinteger;
-  for i := 0 to nquads - 1 do
-  begin
-    qua [i].tid := ueue.giveinteger;
-    qua [i].a.x := ueue.giveinteger; //????? ?????
-    qua [i].a.y := ueue.giveinteger; //???????? ?
-    qua [i].a.z := ueue.giveinteger; //???????? ?
-
-    qua [i].b.x := ueue.giveinteger;
-    qua [i].b.y := ueue.giveinteger;
-    qua [i].b.z := ueue.giveinteger;
-
-    qua [i].c.x := ueue.giveinteger;
-    qua [i].c.y := ueue.giveinteger;
-    qua [i].c.z := ueue.giveinteger;
-
-    qua [i].d.x := ueue.giveinteger;
-    qua [i].d.y := ueue.giveinteger;
-    qua [i].d.z := ueue.giveinteger;
-  end;
-
+  train := TSoftTrain.create(ueue);
   ueue.destroy;
 end;
 
@@ -294,15 +174,14 @@ begin
   chan2:=bass_streamcreatefile(false, pchar('media\stuk.mp3'), 0,0, {$ifdef unicode} bass_unicode {$else} 0 {$endif} or bass_sample_loop {???? ???? ???????? ??? ???? ????? ?????? ?????});
 end;
 
-procedure MovePoint(var a: TRe3dc; kurs, len: real);
+procedure mkphys();
 begin
-  a.x := a.x + len * cos (kurs/180*pi);
-  a.y := a.y + len * sin (kurs/180*pi);
+  physer.calcphys(wtf, train);
 end;
 
 procedure DrawGame(Width, Height: integer; DC:HDC);
 begin
-  Painter.PaintGame(Width, Height, DC, wtf);
+  Painter.PaintGame(Width, Height, DC, wtf, train.ferrum);
 end;
 
 end.

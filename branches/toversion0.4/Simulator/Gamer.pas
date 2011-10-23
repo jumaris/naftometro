@@ -4,10 +4,12 @@ unit Gamer;
 
 interface
 
-uses Bomj, useful, Graphics,
-  MPlayer, Buttons, Bass, StdCtrls, Windows, math, SysUtils, Painter, physer, ObjectContainer;
+uses Bomj, useful, ReallyUseful, Graphics,
+  MPlayer, Buttons, Bass, StdCtrls, Windows, math, SysUtils, Painter, physer,
+  ObjectContainer;
 
 procedure start();
+procedure stop();
 procedure loadcab();
 procedure LoadGame(var logMemo:Tmemo);
 procedure mkgoodscb;
@@ -90,10 +92,6 @@ var
   hz:array [0 .. 100] of THz;
   brakehz:array [0 .. bshamount - 1] of TBrakeHz;
 
-var
-  train:TSoftTrain;
-
-
 procedure Start();
 var i:Integer;
 begin
@@ -110,8 +108,6 @@ begin
   Painter.init();
   logmemo.Visible := True;
   logmemo.Lines.Clear;
-  logmemo.Lines.Add('Загрузка кабины');
-  LoadCab;
   logmemo.Lines.Add('Создание вспомогательного класса');
   wtf := TWTf.sozdat;
   logmemo.Lines.Add('Запуск чёрного ящика');
@@ -119,6 +115,8 @@ begin
   logmemo.Lines.Add('Обработка параметров игры');
   wtf.wwp;
   bwfirst := wtf.constructmap (logmemo);
+  logmemo.Lines.Add('Загрузка кабины');
+  LoadCab;
   logmemo.Lines.Add('Построение светофоров');
   wtf.constructscb (bwfirst);
   logmemo.Lines.Add('Зажжение светофоров');
@@ -133,17 +131,24 @@ begin
     mkgoodscb;
   end;
   physer.init(logMemo, wtf);
-  oldhz := wtf.gnscbid(wtf.ptrain [0], wtf.isleft);
+  oldhz := wtf.gnscbid(wtf.train.PWag[0], wtf.isleft);
   logmemo.Lines.Add('Создание звуков');
   SetChannels;
+end;
+
+procedure stop();
+begin
+  blackbox.writestring(wtf.TimeToStr(timeofplaying) + ' Игра завершена');
+  blackbox.destroy;
 end;
 
 procedure LoadCab;
 var ueue: TShipLoader;
 begin
   ueue := TShipLoader.create('cab.txt');
-  train := TSoftTrain.create(ueue);
+  wtf.constructTrain(wtf.givePTPbyid(wtf.idtrain,bwfirst), ueue);
   ueue.destroy;
+  wtf.constructViewPoint;
 end;
 
 procedure mkgoodscb;
@@ -176,12 +181,12 @@ end;
 
 procedure mkphys();
 begin
-  physer.calcphys(wtf, train);
+  physer.calcphys(wtf, wtf.train);
 end;
 
 procedure DrawGame(Width, Height: integer; DC:HDC);
 begin
-  Painter.PaintGame(Width, Height, DC, wtf, train.ferrum);
+  Painter.PaintGame(Width, Height, DC, wtf.viewPoint);
 end;
 
 end.

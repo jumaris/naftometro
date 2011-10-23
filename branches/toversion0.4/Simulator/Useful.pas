@@ -1,119 +1,46 @@
 unit Useful;
 
 interface
-
-uses Graphics, Math, SysUtils, StdCtrls, Bomj;
-
-const maxnwag = 100;
-      numboc = 9;  //Number of corners
-      theight = 1;
-      twidth = 0.25;
-      maxpok = 20;
-      maxscb = 10000;
-      shpalw = 2.2;
-      msl = 0; //minscblight
-      maxstatn = 100;
+                       
+uses Graphics, Math, SysUtils, StdCtrls, Bomj, ReallyUseful, ObjectContainer,
+  MapUnit;
 
 type
-  T3dc = record   //3d coords
-    x:real;
-    y:real;
-    z:real;
-  end;
-  PTp = ^TTp;
-  PBWp = ^TBWp;
-  TTp = record
-    cx:real;
-    cy:real;
-    cz:real;
-    kurs:real;
-    scbid:integer;
-    next1:PTp;
-    next2:PTp;
-    previous1:PTp;
-    previous2:PTp;
-    together:PTp;
-    isright:boolean;
-    id:integer;
-    idstat:integer;
-    corners:array [0 .. numboc - 1] of T3dc;
-    table:array [0 .. 3] of T3dc;
-    shpala:array [0 .. 7] of T3dc;
-  end;
-  TBWP = record
-    tp:PTp;
-    next:PBWp;
-  end;
-  TMy3dc = record
-    x:integer;
-    y:integer;
-    z:integer;
-  end;
-  Tinst = record
-    x:real;
-    y:Real;
-    z:Real;
-    alpha:Real;
-    id:integer;
-  end;
-  TRe3dc = record
-    x:real;
-    y:real;
-    z:real;
-  end;
-  TBwquads = record
-    a:TMy3dc;
-    b:TMy3dc;
-    c:TMy3dc;
-    d:TMy3dc;
-    tid:Integer;
-  end;
-  TScb = record
-    condition:integer;
-    ntp:PTp;
-    right:boolean;
-    zhelezno:boolean;
-    isforward:boolean;
-    next1, next2:integer;
-    table1:array [0 .. maxpok - 1] of integer; //Своё показание в зависимости от показания next1
-    table2:array [0 .. maxpok - 1] of integer; // -//- next2
-  end;
   Twtf = class
   constructor sozdat;
   function gc1(a: integer): TColor;
-  function gc2 (a:integer):TColor;
-  function gnscbid (p:PTp; isleft:boolean):integer;
-  function gpscbid (p:PTp; isleft:boolean):integer;
+  function gc2(a:integer):TColor;
+  function gnscbid(p:PTp; isleft:boolean):integer;
+  function gpscbid(p:PTp; isleft:boolean):integer;
   function gntrscbid:integer;
-  function GiveAngle(x1, y1, x2, y2: real): real;
-  function giveldouble (a, b:PTp):real;
-  function givelto (a:PTp):real;
-  function givebx (a:PTp):real;
-  function giveby (a:PTp):real;
-  function givebz (a:PTp):real;
-  procedure calccorners (var p:PTp);
-  procedure die (s:string);
+  function giveldouble(a, b:PTp):real;
+  procedure calccorners(var p:PTp);
+  procedure die(s:string);
   procedure initialSCB;
   function isgoodtr:boolean;
-  function givecamkurs:real;
-  function givecamalpha:real;
-  function constructmap (var mmo:TMemo):PBWp;
-  function TimeToStr (time:real):string;
-  procedure constructscb (first:PBWp);
-  function givePTPbyid (id:integer; start:PBWp):PTp;
-  procedure process (s:string);
+  function constructmap(var mmo:TMemo):PBWp;
+  function TimeToStr(time:real):string;
+  procedure constructscb(first:PBWp);
+  function givePTPbyid(id:integer; start:PBWp):PTp;
+  procedure process(s:string);
   procedure wwp; //workwithparams
   procedure constructstat;
   procedure realizestat;
+  procedure constructTrain(head: PTP; var cabloader: TShipLoader);
+  procedure constructViewPoint;
   private
   public
+
+    train: PSoftTrain;
+    viewPoint: PViewPoint;
+
     isleft:boolean;
     scbfile, mapfile, stfile:string;
     amount, idtrain:integer;
     givelimbycond:array [0 .. maxpok - 1] of real;
-    Ptrain:array [0 .. maxnwag] of PTp;
+    //Ptrain:array [0 .. maxnwag] of PTp;
     tr, camdopkurs, camdopalpha:real;
-    cabfactor, nscb, nwag, wlength:integer;
+    nwag, wlength, nscb:integer;
     pheight, pwidth:real;
     nstat:integer;
     uuueee:TShipLoader;
@@ -147,20 +74,9 @@ begin
     result := $00CCCC;
 end;
 
-function Twtf.GiveAngle(x1, y1, x2, y2: real): real;  //from 11 to 22
-begin
-  if x1 = x2 then
-    if y1 > y2 then
-      result := pi / -2
-    else
-      result := pi / 2
-  else
-    result := arctan ((y2 - y1) / (x2 - x1));
-  if x1 > x2 then
-    result := result + pi;
-end;
 
-function Twtf.gnscbid (p:PTp; isleft:boolean): integer;
+
+function Twtf.gnscbid(p:PTp; isleft:boolean): integer;
 begin
   //p^.scbid:=1;
   while ( (p^.scbid = -1) or (not scb [p^.scbid].isforward) )  and (p^.next1 <> nil) do
@@ -171,7 +87,7 @@ begin
   result := p^.scbid;
 end;
 
-function Twtf.gpscbid (p:PTp; isleft:boolean): integer;
+function Twtf.gpscbid(p:PTp; isleft:boolean): integer;
 begin
   while ( (p^.scbid = -1) or (scb [p^.scbid].isforward) )  and (p^.previous1 <> nil) do
     if isleft then
@@ -183,16 +99,34 @@ end;
 
 function Twtf.giveldouble(a, b: PTp): real;
 begin
-  result := sqrt (sqr (a^.cx - b^.cx) + sqr (a^.cy - b^.cy));
+  result := sqrt(sqr(a^.cx - b^.cx) + sqr(a^.cy - b^.cy));
 end;
 
 constructor Twtf.sozdat;
 begin
   isleft := true;
-  tr := 0;
-  cabfactor := 1;
-  camdopkurs := 0;
-  camdopalpha := 0;
+
+  
+  ///cabfactor := 1;
+  //camdopkurs := 0;
+  //camdopalpha := 0;
+
+
+end;
+
+procedure Twtf.constructTrain(head: PTP; var cabloader: TShipLoader);
+var htrain:PHardTrain;
+begin
+  new(htrain);
+  htrain^ := THardTrain.create(cabloader, nwag, wlength);
+  new(train);
+  train^ := TSoftTrain.create(head, htrain);
+end;
+
+procedure Twtf.constructViewPoint;
+begin
+  new(viewPoint);
+  viewPoint^ := TViewPoint.create(1, train);
 end;
 
 procedure Twtf.calccorners(var p: PTp);
@@ -200,110 +134,52 @@ var zkurs, dkurs, rad:real;
     i:integer;
 //zero kurs, deltakurs, radius
 begin
-  zkurs := -1 * arctan (pheight / pwidth);
+  zkurs := -1 * arctan(pheight / pwidth);
   dkurs := (pi - 2 * zkurs) / (numboc - 1);
-  rad := sqrt (sqr (pwidth) + sqr (pheight)) / 2;
+  rad := sqrt(sqr(pwidth) + sqr(pheight)) / 2;
   for i := 0 to numboc - 1 do
   begin
-    p.corners [i].x := p.cx - sin (p.kurs) * rad * cos (zkurs + i * dkurs);
-    p.corners [i].y := p.cy + cos (p.kurs) * rad * cos (zkurs + i * dkurs);
-    p.corners [i].z := p.cz + rad * sin (zkurs + i * dkurs);
+    p.corners [i].x := p.cx - sin(p.kurs) * rad * cos(zkurs + i * dkurs);
+    p.corners [i].y := p.cy + cos(p.kurs) * rad * cos(zkurs + i * dkurs);
+    p.corners [i].z := p.cz + rad * sin(zkurs + i * dkurs);
   end;
 { 01
   32
 }
-  p.table [0].x := p.cx - sin (p.kurs) * pwidth / 2;
-  p.table [0].y := p.cy + cos (p.kurs) * pwidth / 2;
+  p.table [0].x := p.cx - sin(p.kurs) * pwidth / 2;
+  p.table [0].y := p.cy + cos(p.kurs) * pwidth / 2;
   p.table [0].z := p.cz + theight / 2;
-  p.table [3].x := p.cx - sin (p.kurs) * pwidth / 2;
-  p.table [3].y := p.cy + cos (p.kurs) * pwidth / 2;
+  p.table [3].x := p.cx - sin(p.kurs) * pwidth / 2;
+  p.table [3].y := p.cy + cos(p.kurs) * pwidth / 2;
   p.table [3].z := p.cz - theight / 2;
-  p.table [1].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth);
-  p.table [1].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth);
+  p.table [1].x := p.cx - sin(p.kurs) * (pwidth / 2 + twidth);
+  p.table [1].y := p.cy + cos(p.kurs) * (pwidth / 2 + twidth);
   p.table [1].z := p.cz + theight / 2;
-  p.table [2].x := p.cx - sin (p.kurs) * (pwidth / 2 + twidth);
-  p.table [2].y := p.cy + cos (p.kurs) * (pwidth / 2 + twidth);
+  p.table [2].x := p.cx - sin(p.kurs) * (pwidth / 2 + twidth);
+  p.table [2].y := p.cy + cos(p.kurs) * (pwidth / 2 + twidth);
   p.table [2].z := p.cz - theight / 2;
 
   //Ох, шпала...
-  p.shpala [0].x := p.cx - sin (p.kurs) * shpalw / 2;
-  p.shpala [0].y := p.cy + cos (p.kurs) * shpalw / 2;
+  p.shpala [0].x := p.cx - sin(p.kurs) * shpalw / 2;
+  p.shpala [0].y := p.cy + cos(p.kurs) * shpalw / 2;
   p.shpala [0].z := p.cz - pheight / 2 + 0.01;
-  p.shpala [1].x := p.cx + sin (p.kurs) * shpalw / 2;
-  p.shpala [1].y := p.cy - cos (p.kurs) * shpalw / 2;
+  p.shpala [1].x := p.cx + sin(p.kurs) * shpalw / 2;
+  p.shpala [1].y := p.cy - cos(p.kurs) * shpalw / 2;
   p.shpala [1].z := p.cz - pheight / 2 + 0.01;
-  p.shpala [2].x := p.cx + sin (p.kurs) * shpalw / 2;
-  p.shpala [2].y := p.cy - cos (p.kurs) * shpalw / 2;
+  p.shpala [2].x := p.cx + sin(p.kurs) * shpalw / 2;
+  p.shpala [2].y := p.cy - cos(p.kurs) * shpalw / 2;
   p.shpala [2].z := p.cz - pheight / 2 + 0.05;
-  p.shpala [3].x := p.cx - sin (p.kurs) * shpalw / 2;
-  p.shpala [3].y := p.cy + cos (p.kurs) * shpalw / 2;
+  p.shpala [3].x := p.cx - sin(p.kurs) * shpalw / 2;
+  p.shpala [3].y := p.cy + cos(p.kurs) * shpalw / 2;
   p.shpala [3].z := p.cz - pheight / 2 + 0.05;
-end;
-
-function Twtf.givecamkurs: real;
-begin
-  if cabfactor = 1 then
-    result := giveangle (givebx (ptrain [1]), giveby (ptrain [1]), givebx (ptrain [0]), giveby (ptrain [0])) * 180 / 3.1416 + camdopkurs
-  else
-    result := giveangle (givebx (ptrain [nwag - 1]), giveby (ptrain [nwag - 1]), givebx (ptrain [nwag]), giveby (ptrain [nwag])) * 180 / 3.1416 + camdopkurs;
-end;
-
-function Twtf.givelto(a: PTp): real;
-begin
-  if cabfactor = 1 then
-    result := sqrt (sqr (givebx (ptrain [0]) - a^.cx) + sqr (giveby (ptrain [0]) - a^.cy) + sqr (givebz (ptrain [0]) - a^.cz))
-  else
-    result := sqrt (sqr (givebx (ptrain [nwag]) - a^.cx) + sqr (giveby (ptrain [nwag]) - a^.cy) + sqr (givebz (ptrain [nwag]) - a^.cz));
-end;
-
-function Twtf.givebx(a: PTp): real;
-begin
-  if isleft then
-    result := tr * a^.next1^.cx + (1 - tr) * a^.cx
-  else
-    result := tr * a^.next2^.cx + (1 - tr) * a^.cx;
-end;
-
-function Twtf.giveby(a: PTp): real;
-begin
-  if isleft then
-    result := tr * a^.next1^.cy + (1 - tr) * a^.cy
-  else
-    result := tr * a^.next2^.cy + (1 - tr) * a^.cy;
-end;
-
-function Twtf.givebz(a: PTp): real;
-begin
-  if isleft then
-    result := tr * a^.next1^.cz + (1 - tr) * a^.cz
-  else
-    result := tr * a^.next2^.cz + (1 - tr) * a^.cz;
-end;
-
-function Twtf.givecamalpha: real;
-begin
-  if cabfactor = 1 then
-    result := giveangle (0,
-                         givebz (ptrain [1]),
-                         sqrt (sqr (givebx (ptrain [0]) - givebx (ptrain [1]))
-                             + sqr (giveby (ptrain [0]) - giveby (ptrain [1]))),
-                         givebz (ptrain [0])) * 180 / 3.1415 +
-                         camdopalpha
-  else
-    result := giveangle (0,
-                         givebz (ptrain [nwag - 1]),
-                         sqrt (sqr (givebx (ptrain [nwag]) - givebx (ptrain [nwag - 1]))
-                             + sqr (giveby (ptrain [nwag]) - giveby (ptrain [nwag - 1]))),
-                         givebz (ptrain [nwag])) * 180 / 3.1415 +
-                         camdopalpha;
 end;
 
 function Twtf.gntrscbid: integer;
 var p:PTp;
 begin
-  if cabfactor = 1 then
+  if viewPoint.cabfactor = 1 then
   begin
-    p := ptrain [0];
+    p := train.PWag [0];
     while ((p^.scbid = -1) or (not scb [p^.scbid].isforward)) and (p^.next1 <> nil) do
       if isleft then
         p := p^.next1
@@ -313,7 +189,7 @@ begin
   end
   else
   begin
-    p := ptrain [nwag];
+    p := train.PWag [nwag];
     while ((p^.scbid = -1) or (scb [p^.scbid].isforward)) and (p^.previous1 <> nil) do
       if isleft then
         p := p^.previous1
@@ -326,10 +202,10 @@ end;
 procedure Twtf.die(s: string);
 var o:text;
 begin
-  assign (o, 'Die log.txt');
-  rewrite (o);
-  write (o, s);
-  closefile (o);
+  assign(o, 'Die log.txt');
+  rewrite(o);
+  write(o, s);
+  closefile(o);
 end;
 
 procedure Twtf.initialSCB;
@@ -350,7 +226,7 @@ begin
   givelimbycond [12] := 35 / 3.6;
 end;
 
-function Twtf.constructmap (var mmo:TMemo): PBWp;
+function Twtf.constructmap(var mmo:TMemo): PBWp;
 var first, a, b:PBWp;
     i, j:integer;
     f:text;
@@ -362,46 +238,46 @@ begin
   i := 1;
   mmo.Lines.Add('Загрузка карты');
 
-  assign (f, 'map/' + mapfile);
-  reset (f);
+  assign(f, 'map/' + mapfile);
+  reset(f);
   s := '';
   while not eof(f) do
   begin
-    readln (f, s);
+    readln(f, s);
     if length(s)>0 then
     begin
       if s[1]='#' then continue;//comment
       if s[1]='!' then break;//end of head part
     end;
-    process (s);
+    process(s);
   end;
-  new (first);
+  new(first);
   a := first;
             //SOBAKA
   while i <= amount do       //Первый пробег - заполнение полей, которые можно сразу
   begin
-    new (b);
+    new(b);
     a^.next := b;
-    new (a^.tp);
+    new(a^.tp);
 
-    read (f, a^.tp^.id);             //id
-    read (f, a^.tp^.cx);             //x
-    read (f, a^.tp^.cy);             //y
-    read (f, a^.tp^.cz);            //z
+    read(f, a^.tp^.id);             //id
+    read(f, a^.tp^.cx);             //x
+    read(f, a^.tp^.cy);             //y
+    read(f, a^.tp^.cz);            //z
 
     //Холостое считываение
-    read (f, tmpi);  //n1
-    read (f, tmpi);  //n2
-    read (f, tmpi);  //p1
-    read (f, tmpi);  //p2
-    read (f, tmpi);  //t
+    read(f, tmpi);  //n1
+    read(f, tmpi);  //n2
+    read(f, tmpi);  //p1
+    read(f, tmpi);  //p2
+    read(f, tmpi);  //t
 
-    read (f, a^.tp^.idstat);
-    readln (f, tmpi);  //bool
+    read(f, a^.tp^.idstat);
+    readln(f, tmpi);  //bool
 
     a^.tp^.isright:=(tmpi and 1)<>0;
     a := b;
-    inc (i);
+    inc(i);
   end;
   close (f);
   a^.next := nil;
@@ -481,14 +357,6 @@ begin
     calccorners (a^.tp);
     a^.tp^.scbid := -1;
     a := a^.next;
-  end;
-
-  ptrain [0] := givePTPbyid (idtrain, first);
-  for i := 1 to nwag do
-  begin
-    Ptrain [i] := ptrain [i - 1];
-    for j := 0 to wlength - 1 do
-      ptrain [i] := ptrain [i]^.previous1;
   end;
   result := first;
 end;
@@ -581,7 +449,7 @@ var t:Ptp;
     i:integer;
     g:boolean; //goood?
 begin
-  t := ptrain [nwag];
+  t := train.PWag [nwag];
   g := true;
   for i := 1 to nwag * wlength do
   begin
@@ -592,7 +460,7 @@ begin
       t := t^.next2;
   end;
   g := g and (t^.next1 = t^.next2) and (t^.previous1 = t^.previous2);
-  if not (t = ptrain [0]) then
+  if not (t = train.PWag [0]) then
     die ('invalid train - head and ass are not friends!');
   result := g;
 end;

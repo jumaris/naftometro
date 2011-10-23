@@ -396,11 +396,10 @@ end;
 }
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  {if bbstarted then
+  if bbstarted then
   begin
-    blackbox.sri(wtf.TimeToStr(timeofplaying) + ' Игра завершена');
-    blackbox.Lesha;
-  end;}
+    Gamer.Stop();
+  end;
 end;
 
 {procedure TMainForm.DrawGame;

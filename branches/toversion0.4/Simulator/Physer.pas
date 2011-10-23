@@ -3,7 +3,7 @@ unit physer;
 interface
 
 uses
-  useful,Classes,SysUtils,math,StdCtrls,ObjectContainer;
+  useful,ReallyUseful,Classes,SysUtils,math,StdCtrls,ObjectContainer,MapUnit;
 
 
 const
@@ -66,7 +66,7 @@ var
 
 procedure init(var logmemo:TMemo; var wtf:Twtf);
 procedure calcPanel(k:real; const wtf:Twtf);
-procedure calcphys(const wtf: TWtf; var train:TSoftTrain);
+procedure calcphys(const wtf: TWtf; train:PSoftTrain);
 function givei(i: integer; v: real): real;
 function givef(i: integer; v: real): real;
 procedure mkgoodscb(var wtf:Twtf);
@@ -106,14 +106,14 @@ begin
 
   if (rwaiting <= 0) and (rup = 0) then
   begin
-    if ((Mykeys.fw and (wtf.cabfactor = 1)) or (Mykeys.bw and (wtf.cabfactor = -1))) and (revers < 1)  then
+    if ((Mykeys.fw and (wtf.viewPoint.cabfactor = 1)) or (Mykeys.bw and (wtf.viewPoint.cabfactor = -1))) and (revers < 1)  then
     begin
       nrevers:=revers+1;
       MyKeys.fw := false;
       MyKeys.bw := false;
       rwaiting := 1;
     end;
-    if ((Mykeys.fw and (wtf.cabfactor = -1)) or (Mykeys.bw and (wtf.cabfactor = 1))) and (revers > -1) then
+    if ((Mykeys.fw and (wtf.viewPoint.cabfactor = -1)) or (Mykeys.bw and (wtf.viewPoint.cabfactor = 1))) and (revers > -1) then
     begin
       nrevers:=revers-1;
       MyKeys.fw := false;
@@ -132,7 +132,7 @@ begin
 
 end;
 
-procedure calcphys(const wtf: TWtf; var train:TSoftTrain);
+procedure calcphys(const wtf: TWtf; train:PSoftTrain);
 var
   zhvost, zgolova, F, f2:real;
   k,nowtime:real;
@@ -181,51 +181,13 @@ begin
   if kran >= (0.45) then
     prs := min(pmax,prs - (0.45 - kran) * kv * k * (pmax - prs));
 
-
-  train.coord := train.coord + v * k;
-  while train.coord > 1 do
-  begin
-    train.coord := train.coord - 1;
-    if wtf.isleft then
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.next1
-    else
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.next2;
-    inc (itx);
-
-    if (((wtf.Ptrain [0]^.next1 = nil) and wtf.isleft) or
-       ((wtf.Ptrain [0]^.next2 = nil) and not wtf.isleft)) then
-    begin
-      wtf.die('Выезд за пределы тоннеля');
-      gameover:=true;
-      halt;
-    end;
-  end;
-  while train.coord < 0 do
-  begin
-    train.coord := train.coord + 1;
-    if wtf.isleft then
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.previous1
-    else
-      for i := 0 to wtf.nwag do
-        wtf.Ptrain [i] := wtf.ptrain [i]^.previous2;
-    dec (itx);
-
-    if (((wtf.Ptrain [wtf.nwag]^.previous1 = nil) and wtf.isleft) or
-       ((wtf.Ptrain [wtf.nwag]^.previous2 = nil) and not wtf.isleft)) then
-    begin
-      wtf.die('Выезд за пределы тоннеля');
-      gameover:=true;
-      Halt;
-    end;
-  end;
+  train.move(v*k, wtf.isleft);
+  
   timeofplaying := timeofplaying + k;
   v := v - v * mu * k;
 
-  zgolova := wtf.givebz (wtf.ptrain [0]);
-  zhvost := wtf.givebz (wtf.ptrain [wtf.nwag]);
+  zgolova := givebz(wtf.train.PWag[0], wtf.train.coord);
+  zhvost := givebz (wtf.train.PWag[wtf.train.ferrum.nwag], wtf.train.coord);
   v := v + g * (zhvost - zgolova) / (wtf.nwag * wtf.wlength) * k;
 
   //F без к !!!!!!!!!!!!!!
@@ -293,7 +255,6 @@ begin
   climit := 80 / 3.6;
   //k := TiPhysInterval / 1000 * acc;
   waiting := 0;
-  wtf.cabfactor := 1;
   isrp := false;
 {  for i := 0 to maxscb - 1 do
   begin

@@ -5,9 +5,9 @@ interface
 uses
   SysUtils, math, windows, Graphics, Classes,
   dglOpenGL, OpenGL,
-  useful, ObjectContainer;
+  useful, ReallyUseful, ObjectContainer, MapUnit;
 
-  procedure PaintGame(Width, Height: integer; DC:HDC; const wtf:TWtf; const train: THardTrain);
+  procedure PaintGame(Width, Height: integer; DC:HDC; viewPoint: PViewPoint);
   procedure init();
 
 implementation
@@ -28,9 +28,6 @@ const         // цвет тюбинга
 const
   maxdep = 100;     // длина отрисовки
 
-var
-  realpoin: array [0..10000] of TRe3dc;
-
 procedure zafigachtexturu(i: integer);
 var DataA:array of Byte;
     j:integer;
@@ -43,17 +40,17 @@ begin
     Finalize (DataA);
 end;
 
-function bwgc(p: PTp; const wtf: Twtf): real;
+function bwgc(p: PTp; viewPoint:PViewPoint): real;
 begin
-  result := 1 / (1.5 + sqr (wtf.givelto(p) / delit));
+  result := 1 / (1.5 + sqr (viewPoint.givelto(p) / delit));
 end;
 
-procedure PaintSCB(const wtf: Twtf);
+procedure PaintSCB();
 var i:integer;
     p2:PTp;
 begin
-  for i := 0 to wtf.nscb - 1 do
-  if ((wtf.cabfactor = 1) and wtf.scb[i].isforward) or ((wtf.cabfactor = -1) and not wtf.scb[i].isforward) then
+  {for i := 0 to wtf.nscb - 1 do
+  if ((wtf.viewPoint.cabfactor = 1) and wtf.scb[i].isforward) or ((wtf.viewPoint.cabfactor = -1) and not wtf.scb[i].isforward) then
   begin
     p2 := wtf.scb[i].ntp;
     zafigachtexturu(wtf.scb[i].condition);
@@ -67,10 +64,10 @@ begin
       glTexCoord2f (0, 1);
       glVertex3f (p2^.table[3].x, p2^.table[3].y, p2^.table[3].z);
     glEnd;
-  end;
+  end; }
 end;
 
-procedure PaintTubing(p: Ptp; var localidstat: integer; const wtf: TWtf);
+procedure PaintTubing(p: Ptp; var localidstat: integer; viewPoint:PViewPoint);
 var i:integer;
     p2:PTp;
     c:Real;
@@ -83,7 +80,7 @@ begin
     localidstat := max(p2^.idstat, p^.idstat);
     Exit;
   end;
-  c := bwgc(p, wtf);
+  c := bwgc(p, viewPoint);
   glColor3f(C * tubr, c * tubg, c * tubb);
   if (p^.together = p) or (p^.isright) then
     for i := 0 to numboc div 2 - 1 do
@@ -115,10 +112,10 @@ begin
     end;
 end;
 
-procedure PaintStation(localidstat:integer; const wtf:Twtf);
+procedure PaintStation(localidstat:integer);
 var i:Integer;
 begin
-  glColor3f(1, 1, 1);
+  {glColor3f(1, 1, 1);
   for i := 0 to wtf.nstatquad[localidstat] - 1 do
   begin
     zafigachtexturu(wtf.statqua[localidstat, i].tid);
@@ -132,10 +129,10 @@ begin
       glTexCoord2f (wtf.statqua[localidstat, i].d.y, wtf.statqua[localidstat,i].d.z);
       glVertex3f (wtf.statrealpoin[localidstat, wtf.statqua[localidstat,i].d.x].x, wtf.statrealpoin[localidstat, wtf.statqua[localidstat,i].d.x].y, wtf.statrealpoin[localidstat, wtf.statqua[localidstat,i].d.x].z);
     glEnd;
-  end;
+  end;  }
 end;
 
-procedure PaintFloor(p: Ptp; const wtf: TWtf);
+procedure PaintFloor(p: Ptp; viewPoint:PViewPoint);
 var p2, p3:PTp;
     c:Real;
     i:Integer;
@@ -143,7 +140,7 @@ begin
   if p = nil then Exit;
 
   p2 := p^.next2;
-  c := bwgc(p, wtf);
+  c := bwgc(p, viewPoint);
   glColor3f(C * tubr, c * tubg, c * tubb);
   if (p^.previous1 = nil) or (p2 = nil) then            //Заплатка на конец тоннеля
     for i := 0 to numboc div 2 - 1 do
@@ -239,14 +236,14 @@ begin
   end;
 end;
 
-procedure PaintRails(p: Ptp; const wtf: TWtf);
+procedure PaintRails(p: Ptp; viewPoint:PViewPoint);
 var p2:PTp;
     c:Real;
 begin
   if p = nil then Exit;
   p2 := p^.next2;
   if p2 = nil then Exit;
-  c := bwgc(p, wtf);
+  c := bwgc(p, viewPoint);
   glColor3f(c * tubr, c * tubg, c * tubb);
   glBegin(GL_QUADS);
     glTexCoord2f (0, 0);
@@ -260,17 +257,21 @@ begin
   glEnd;
 end;
 
-procedure RecConstQue(p:PTp; dep:integer; const wtf:Twtf; var queuestart:PBwp);
+procedure RecConstQue(p:PTp; dep:integer; var queuestart:PBwp; viewPoint:PViewPoint);
 var pp:PBWp;
     hrue:PTp;
     togdadep:integer;
 begin
-  if (wtf.cabfactor=1) then
+  if (viewPoint.cabfactor=1) then
   begin
     pp:=queuestart;
     hrue := nil;
     while (pp^.next <> nil) do
       pp := pp^.next;
+
+
+    togdadep:= -100500;
+
     while (dep < maxdep) and (p <> nil) and (p^.next1 = p^.next2) do
     begin
       new (pp^.next);
@@ -292,16 +293,17 @@ begin
       p := p^.next1;
       inc (dep);
     end;
+    assert(togdadep<>100500);
     if hrue <> nil then
-      RecConstQue(hrue, togdadep, wtf, queuestart);
+      RecConstQue(hrue, togdadep, queuestart, viewPoint);
     if  (dep < maxdep) and (p <> nil) and (p^.next1 <> nil) and (p^.next2 <> nil) then
     begin
       new (pp^.next);
       pp := pp^.next;
       pp^.next := nil;
       pp^.tp := p;
-      RecConstQue(p^.next1, dep, wtf, queuestart);
-      RecConstQue(p^.next2, dep, wtf, queuestart);
+      RecConstQue(p^.next1, dep, queuestart, viewPoint);
+      RecConstQue(p^.next2, dep, queuestart, viewPoint);
     end;
   end
   else
@@ -332,15 +334,15 @@ begin
       inc (dep);
     end;
     if hrue <> nil then
-      RecConstQue(hrue, togdadep, wtf, queuestart);
+      RecConstQue(hrue, togdadep, queuestart, viewPoint);
     if  (dep < maxdep) and (p <> nil) and (p^.previous1 <> nil) and (p^.previous2 <> nil) then
     begin
       new (pp^.next);
       pp := pp^.next;
       pp^.next := nil;
       pp^.tp := p;
-      RecConstQue(p^.previous1, dep, wtf, queuestart);
-      RecConstQue(p^.previous2, dep, wtf, queuestart);
+      RecConstQue(p^.previous1, dep, queuestart, viewPoint);
+      RecConstQue(p^.previous2, dep, queuestart, viewPoint);
     end;
   end;
 end;
@@ -380,7 +382,7 @@ begin
   end;
 end;
 
-procedure PaintScene(const wtf:TWtf);
+procedure PaintScene(viewPoint:PViewPoint);
 var
   bwa:PBWp;
   queuestart: PBWp;
@@ -388,34 +390,34 @@ var
 begin
   zafigachtexturu(16);
   new (queuestart);
-  queuestart^.tp := wtf.ptrain[1]^.previous1;
+  queuestart^.tp := viewPoint.train.PWag[1]^.previous1;
   queuestart^.next := nil;
-  RecConstQue(wtf.ptrain[1], 0, wtf, queuestart);
+  RecConstQue(viewPoint.train.PWag[1], 0, queuestart, viewPoint);
   SimpQue(queuestart);
 
   bwa := queuestart;
   localidstat := 0;
   while bwa <> nil do
   begin
-    PaintTubing(bwa^.tp, localidstat, wtf);
+    PaintTubing(bwa^.tp, localidstat, viewPoint);
     bwa := bwa^.next;
   end;
 
   if localidstat > 0 then
-    PaintStation(localidstat, wtf);
+    PaintStation(localidstat);
 
   zafigachtexturu(17);
   bwa := queuestart;
   while bwa <> nil do
   begin
-    PaintFloor(bwa^.tp, wtf);
+    PaintFloor(bwa^.tp, viewPoint);
     bwa := bwa^.next;
   end;
 
   zafigachtexturu(22);
   while (queuestart <> nil) do
   begin
-    PaintRails(queuestart^.tp, wtf);
+    PaintRails(queuestart^.tp, viewPoint);
     bwa := queuestart;
     queuestart := queuestart ^.next;
     Dispose (bwa);
@@ -442,59 +444,23 @@ begin
   end;}
 end;
 
-procedure MovePoint(var a: TRe3dc; kurs, len: real);
+procedure PaintGame(Width, Height: integer; DC:HDC; viewPoint: PViewPoint);
 begin
-  a.x := a.x + len * cos (kurs/180*pi);
-  a.y := a.y + len * sin (kurs/180*pi);
-end;
-
-procedure CalcRealPoints(const wtf:TWtf; npoin:Integer; const poin:array of TRe3dc);
-var i:integer;
-    x, y, kurs, z:Real;
-begin
-  if wtf.cabfactor=1 then
-  begin
-    x := wtf.givebx(wtf.ptrain[0]);
-    y := wtf.giveby(wtf.ptrain[0]);
-    z := wtf.givebz(wtf.ptrain[0]);
-  end
-  else
-  begin
-    x := wtf.givebx(wtf.ptrain[wtf.nwag]);
-    y := wtf.giveby(wtf.ptrain[wtf.nwag]);
-    z := wtf.givebz(wtf.ptrain[wtf.nwag]);
-  end;
-  kurs := wtf.givecamkurs - wtf.camdopkurs;
-
-  //кабина
-  for i := 0 to npoin - 1 do   //??????? ????? ? ???? ?? ?????? ??????
-  begin
-    realpoin[i].x := x;
-    realpoin[i].y := y;
-
-    MovePoint(realpoin[i], kurs, Poin[i].x);
-    MovePoint(realpoin[i], kurs + 90, Poin[i].y);
-    realpoin[i].z := poin[i].z + z;
-  end;
-end;
-
-procedure PaintGame(Width, Height: integer; DC:HDC; const wtf:TWtf; const train: THardTrain);
-begin
-  calcRealPoints(wtf, train.npoin, train.poin);
+  viewPoint.calcRealPoints();
   glViewPort (0, 0, Width, Height);
   glClear (GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glPushMatrix;
 
   //Поворот камеры, т.е. системы координат
-  glRotatef (wtf.givecamalpha, -1, 0, 0);
-  glRotatef (wtf.givecamkurs, 0, -1, 0);
+  glRotatef (viewPoint.givecamalpha, -1, 0, 0);
+  glRotatef (viewPoint.givecamkurs, 0, -1, 0);
 
   glRotatef (90, -1, 0, 0);
   glRotatef (90, 0, 0, 1);
-  glTranslatef(-realpoin[train.glaz].x, -realpoin[train.glaz].y, -realpoin[train.glaz].z);
+  glTranslatef(-viewPoint.train.realpoin[viewPoint.train.ferrum.glaz].x, -viewPoint.train.realpoin[viewPoint.train.ferrum.glaz].y, -viewPoint.train.realpoin[viewPoint.train.ferrum.glaz].z);
 
-  PaintSCB(wtf);
-  PaintScene(wtf);
+  PaintSCB();
+  PaintScene(viewPoint);
 
   PaintCab;
 

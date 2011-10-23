@@ -10,7 +10,9 @@ uses
   Gamer in 'Gamer.pas',
   Painter in 'Painter.pas',
   Physer in 'Physer.pas',
-  ObjectContainer in 'ObjectContainer.pas';
+  ObjectContainer in 'ObjectContainer.pas',
+  ReallyUseful in 'ReallyUseful.pas',
+  MapUnit in 'MapUnit.pas';
 
 {$R *.res}
 

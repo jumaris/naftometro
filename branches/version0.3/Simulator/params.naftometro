@@ -1,0 +1,9 @@
+map=output.naftomap
+nwag=6
+wlength=19
+pheight=4,4
+pwidth=4,16
+time_acceleration=1,5
+valphacam=100
+voltage=825
+draw_depth=100

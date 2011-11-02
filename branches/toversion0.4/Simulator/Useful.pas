@@ -8,6 +8,7 @@ uses Graphics, Math, SysUtils, StdCtrls, Bomj, ReallyUseful, ObjectContainer,
 type
   Twtf = class
   constructor sozdat;
+  destructor destroy();
   function gc1(a: integer): TColor;
   function gc2(a:integer):TColor;
   function gnscbid(p:PTp; isleft:boolean):integer;
@@ -112,6 +113,13 @@ begin
   //camdopalpha := 0;
 
 
+end;
+
+destructor Twtf.destroy();
+begin
+  train.ferrum.Free;
+  train.Free;
+  viewPoint.Free;
 end;
 
 procedure Twtf.constructTrain(head: PTP; var cabloader: TShipLoader);

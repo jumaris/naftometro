@@ -140,6 +140,7 @@ procedure stop();
 begin
   blackbox.writestring(wtf.TimeToStr(timeofplaying) + ' Игра завершена');
   blackbox.destroy;
+  wtf.destroy;
 end;
 
 procedure LoadCab;

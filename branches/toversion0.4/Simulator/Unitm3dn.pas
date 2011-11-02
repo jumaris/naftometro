@@ -1,4 +1,20 @@
-{ЖИЗНЬ ПРЕКРАСНА!!!}
+{
+
+ЖИЗНЬ ПРЕКРАСНА!!!
+Метро - это жизнь.
+Значит, NaftoMetro - попытка смоделировать прекрасное! 
+
+type TOurSmallVirtualWorld = class(TWorld);
+
+function NothingToWorld(nothing:TNothing):TWorld;
+var
+  ourSmallVirtualWorld: TOurSmallVirtualWorld;
+begin
+  ourSmallVirtualWorld := TOurSmallVirtualWorld.create();
+  result := ourSmallVirtualWorld;
+end;
+
+}
 
 unit Unitm3dn;
 
@@ -396,6 +412,7 @@ end;
 }
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  halt;
   if bbstarted then
   begin
     Gamer.Stop();
@@ -523,5 +540,3 @@ begin
 end;}
 
 end.
-
-//function WorldToNothing (world:Tworld):TNothing;

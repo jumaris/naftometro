@@ -2,43 +2,111 @@ unit MapUnit;
 
 interface
 
-uses ReallyUseful;
+uses ReallyUseful, Math;
 
-function givebx(a: PTp; tr:real): real;
-function giveby(a: PTp; tr:real): real;
-function givebz(a: PTp; tr:real): real;
-function giveAngle(x1, y1, x2, y2: real): real;  //from 11 to 22
+function getAngle(x1, y1, x2, y2: real): real;  //from 11 to 22
+
+type
+
+PAbstractPosition = ^TAbstractPosition;
+TAbstractPosition = class
+protected
+  function givebx():real;
+  function giveby():real;
+  function givebz():real;
+public
+  //gettype procedures
+  function getPoint:PTp; virtual; abstract;
+  function getExtra:Real; virtual; abstract; //contract: minimal > 0
+  function getdir:Boolean; virtual; abstract;
+  function getRe3dc(): TRe3dc;
+  //settype procedures
+  procedure move(x: real); virtual; abstract;
+end;
+
+PMajorPosition = ^TMajorPosition;
+TMajorPosition = class(TAbstractPosition)
+public
+  point: PTp;
+  extra: Real;
+  dir: Boolean; //по ходу едем?
+  procedure reverse();
+  //todo: implement getters  and move
+end;
+
+PMinorPosition = ^TMinorPosition;
+TMinorPosition = class(TAbstractPosition)  //следует за major
+  major: PAbstractPosition;
+  distance: Real;
+  function getPoint:PTp; override;
+  function getExtra:Real; override;
+  function cloneToMajorPosition:PMajorPosition;
+end;
+
+PStick = ^TStick;
+TStick = class
+public
+  major: PMajorPosition;
+  minor: PMinorPosition;
+
+  procedure reverse();
+end;
 
 implementation
 
 const isleft = True; // нужно читать каждую стрелку
 
-function givebx(a: PTp; tr:real): real;
+procedure TMajorPosition.reverse();
 begin
-  if isleft then
-    result := tr * a^.next1^.cx + (1 - tr) * a^.cx
-  else
-    result := tr * a^.next2^.cx + (1 - tr) * a^.cx;
+  dir := not dir;
 end;
 
-function giveby(a: PTp; tr:real): real;
+function TAbstractPosition.getRe3dc():TRe3dc;
 begin
-  if isleft then
-    result := tr * a^.next1^.cy + (1 - tr) * a^.cy
-  else
-    result := tr * a^.next2^.cy + (1 - tr) * a^.cy;
+  Result.x:=givebx;
 end;
 
-function givebz(a: PTp; tr:real): real;
+function TAbstractPosition.givebx(): real;
 begin
   if isleft then
-    result := tr * a^.next1^.cz + (1 - tr) * a^.cz
+    result := getExtra * getPoint^.next1^.cx + (1 - getExtra) * getPoint^.cx
   else
-    result := tr * a^.next2^.cz + (1 - tr) * a^.cz;
+    result := getExtra * getPoint^.next2^.cx + (1 - getExtra) * getPoint^.cx;
 end;
 
-function giveAngle(x1, y1, x2, y2: real): real;  //from 11 to 22
+function TAbstractPosition.giveby(): real;
 begin
+  if isleft then
+    result := getExtra * getPoint^.next1^.cy + (1 - getExtra) * getPoint^.cy
+  else
+    result := getExtra * getPoint^.next2^.cy + (1 - getExtra) * getPoint^.cy;
+end;
+
+function TAbstractPosition.givebz(): real;
+begin
+  if isleft then
+    result := getExtra * getPoint^.next1^.cz + (1 - getExtra) * getPoint^.cz
+  else
+    result := getExtra * getPoint^.next2^.cz + (1 - getExtra) * getPoint^.cz;
+end;
+
+function TMinorPosition.getPoint():PTp;
+begin
+  Writeln('Error at TMinorPosition.getPoint');
+  //todo
+end;
+
+function TMinorPosition.getExtra():Real;
+begin
+  Writeln('Error at TMinorPosition.getExtra');
+  //todo
+end;
+
+function TMinorPosition.cloneToMajorPosition():PMajorPosition;
+
+function getAngle(x1, y1, x2, y2: real): real;  //from 11 to 22
+begin
+  //todo: results := ArcTan2(y2-y1,x2-x1);
   if x1 = x2 then
     if y1 > y2 then
       result := pi / -2
@@ -48,6 +116,11 @@ begin
     result := arctan((y2 - y1) / (x2 - x1));
   if x1 > x2 then
     result := result + pi;
+end;
+
+procedure TStick.reverse();
+begin
+  
 end;
 
 end.

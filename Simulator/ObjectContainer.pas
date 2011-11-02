@@ -3,7 +3,7 @@ unit ObjectContainer;
 interface
 
 uses
-  ReallyUseful, Bomj, Mapunit;
+  ReallyUseful, Bomj, Mapunit, ObjectContainer1;
 
 type
 PSoftTrain = ^TSoftTrain;
@@ -21,7 +21,7 @@ THardTrain = class
 
 public
   constructor create(var cabloader: TShipLoader; nwag,wlength:integer);
-  //destructor destroy();
+  destructor destroy(); override;
 end;
 
 TSoftTrain = class
@@ -49,6 +49,10 @@ TViewPoint = class
   function givecamkurs: real;
   function givecamalpha: real;
   procedure CalcRealPoints();
+end;
+
+TStrelka = class
+  left:boolean;
 end;
 
 implementation
@@ -91,6 +95,12 @@ begin
   end;
 
 end;
+
+destructor THardTrain.destroy();
+begin
+  finalize(poin);
+  inherited;
+end; 
 
 constructor TSoftTrain.create(head: PTP; pHardTrain:PHardTrain);
 var

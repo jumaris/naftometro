@@ -2,17 +2,22 @@ unit Bomj;
 
 interface
 
-type TShipLoader = class
-       constructor create (s:string);
-       destructor destroy;
-       function givereal:Real;
-       function giveinteger:Integer;
-     private
-       f:Text;
-     end;
-     TBlackbox = class
+type
+PShipLoader = ^TShipLoader;
+TShipLoader = class
+public
+  constructor create (s:string);
+  destructor destroy; override;
+  function givereal:Real;
+  function giveinteger:Integer;
+private
+  f:Text;
+end;
+
+
+type TBlackbox = class
        constructor create;
-       destructor destroy;
+       destructor destroy; override;
        procedure writestring (s:string);
      private
        f:Text;
